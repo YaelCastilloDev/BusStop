@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\JenilSojitra\CleanArchitectureDemo\CleanArchitecture\CleanArchitecture.Domain\Domain.csproj" />
+
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="DTOs\Stop\" />
+    <Folder Include="DTOs\User\" />
+    <Folder Include="DTOs\Route\" />
+    <Folder Include="Features\Auth\Commands\" />
+    <Folder Include="Features\Auth\Commands\Login\" />
+    <Folder Include="Features\Auth\Queries\" />
+    <Folder Include="Mappings\" />
+    <Folder Include="Profiles\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="15.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="2.3.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.9" />
+  </ItemGroup>
+
+</Project>
