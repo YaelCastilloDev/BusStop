@@ -1,5 +1,7 @@
 // Program.cs (Updated)
 
+using Application.Services.Interfaces.Authentication;
+using Infraestructur.Identity.Services;
 using Infraestructur.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,11 +10,12 @@ var builder = WebApplication.CreateBuilder(args);
 var licenseKey = builder.Configuration.GetValue<string>("AutoMapper:LicenseKey");
 
 
-// Add services to the container.
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+// Add this with your other services
+builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 
 // --- 2. Configure AutoMapper with the retrieved Key and Assembly Scan ---
 // Use the overload that takes a delegate (Action<IMapperConfigurationExpression>)

@@ -7,6 +7,8 @@ namespace Application.DTOs.Auth
     {
         public string? Message { get; set; }
 
+        public Boolean ? Success { get; set; }
+
         public bool ISAuthenticated { get; set; }
 
         public string? UserName { get; set; }

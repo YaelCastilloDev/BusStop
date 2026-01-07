@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿// --- Infrastructur/Data/Configurations/StopConfiguration.cs ---
+using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -9,37 +10,53 @@ namespace Infrastructur.Data.Configurations
         public void Configure(EntityTypeBuilder<Stop> builder)
         {
             builder.ToTable("stops");
-            builder.
-            // Composite Primary Key (id, stop_types_bus_stop)
-            HasKey(e => new { e.Id, e.StopTypeBusStopId });
 
-            // BINARY(16) to Guid conversion and column names
+            // Primary key is now just 'Id'
+            builder.HasKey(e => e.Id);
+
             builder.Property(e => e.Id).HasColumnName("id").HasConversion<byte[]>();
-            builder.Property(e => e.PreviousStopId).HasColumnName("previous_stop").HasConversion<byte[]>();
-            builder.Property(e => e.NextStopId).HasColumnName("next_stop").HasConversion<byte[]>();
             builder.Property(e => e.RouteId).HasColumnName("routes_id").HasConversion<byte[]>();
-            builder.Property(e => e.StopTypeBusStopId).HasColumnName("stop_types_bus_stop");
 
-            // Map POINT type (Requires NetTopologySuite)
-            builder.Property(e => e.Location).HasColumnName("location").HasColumnType("point").IsRequired();
+            // Map the 'Route' property to the 'route' (multilinestring) column
+            builder.Property(e => e.Route)
+                .HasColumnName("route")
+                .HasColumnType("multilinestring")
+                .IsRequired();
 
-            // FK: fk_stops_routes1 (Stop -> Route)
-            builder.HasOne(d => d.Route)
+            // Add mappings for new audit columns
+            builder.Property(e => e.DeletedAt).HasColumnName("deleted_at").HasColumnType("timestamp");
+            builder.Property(e => e.CreatedBy).HasColumnName("created_by").HasConversion<byte[]>();
+            builder.Property(e => e.DeletedBy).HasColumnName("deleted_by").HasConversion<byte[]>();
+
+            // --- Removed Property Mappings ---
+            // builder.Property(e => e.PreviousStopId)...
+            // builder.Property(e => e.NextStopId)...
+            // builder.Property(e => e.StopTypeBusStopId)...
+            // builder.Property(e => e.Location)...
+
+            // FK to Routes
+            builder.HasOne(d => d.RouteNav) // Use the renamed navigation property
                 .WithMany(p => p.Stops)
                 .HasForeignKey(d => d.RouteId)
                 .HasConstraintName("fk_stops_routes1")
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // FK: fk_stops_stop_types1 (Stop -> StopType)
-            builder.HasOne(d => d.StopType)
-                .WithMany(p => p.Stops)
-                .HasForeignKey(d => d.StopTypeBusStopId)
-                .HasConstraintName("fk_stops_stop_types1")
+            // Added FK to Users for CreatedBy
+            builder.HasOne(d => d.CreatedByUser)
+                .WithMany(p => p.CreatedStops)
+                .HasForeignKey(d => d.CreatedBy)
+                .HasConstraintName("fk_stops_users1")
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // NOTE: Self-referencing keys (PreviousStop/NextStop) are often complex 
-            // and might be better handled in separate relationships if required for navigation.
-            // Since they are only columns here, they are mapped as simple properties.
+            // Added FK to Users for DeletedBy
+            builder.HasOne(d => d.DeletedByUser)
+                .WithMany(p => p.DeletedStops)
+                .HasForeignKey(d => d.DeletedBy)
+                .HasConstraintName("fk_stops_users2")
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Removed FK for StopType
+            // builder.HasOne(d => d.StopType)...
         }
     }
 }

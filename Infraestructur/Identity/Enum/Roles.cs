@@ -2,10 +2,10 @@
 {
     public enum Roles
     {
-        SuperAdmin,
-        Admin,
-        Moderator,
-        BasicUser
+        SuperAdmin, // anything
+        Admin,  // approves deletes
+        Moderator, // deletes routes
+        BasicUser // registers stops
 
     }
 }

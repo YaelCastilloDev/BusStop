@@ -32,7 +32,6 @@ namespace Infraestructur.Services
         {
             try
             {
-                // create message
                 var email = new MimeMessage();
                 email.Sender = new MailboxAddress(_mailSettings.DisplayName, _mailSettings.Mail);
                 email.To.Add(MailboxAddress.Parse(request.ToEmail));
@@ -53,13 +52,5 @@ namespace Infraestructur.Services
                 throw new Exception(ex.Message);
             }
         }
-
-
-
-
-
-
-
-
     }
 }

@@ -34,7 +34,7 @@ namespace Infrastructur.Identity.Services
         #region create JWT
 
         // create JWT
-        private async Task<JwtSecurityToken> CreateJwtAsync(AppUser user)
+        private async Task<JwtSecurityToken> CreateJwtAsync(AppUser user) 
         {
             var userClaims = await _userManager.GetClaimsAsync(user);
             var roles = await _userManager.GetRolesAsync(user);
@@ -45,7 +45,7 @@ namespace Infrastructur.Identity.Services
 
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Name),
+                new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim("userId", user.Id.ToString()),
@@ -114,10 +114,10 @@ namespace Infrastructur.Identity.Services
             //fill
             var user = new AppUser
             {
-                Name = model.Name,
+                UserName = model.Name,
                 Email = model.Email
             };
-
+            
             var result = await _userManager.CreateAsync(user, model.Password);
 
             //check result
@@ -153,7 +153,7 @@ namespace Infrastructur.Identity.Services
             auth.Email = user.Email;
             auth.Roles = new List<string> { "User" };
             auth.ISAuthenticated = true;
-            auth.UserName = user.Name;
+            auth.UserName = user.UserName;
             auth.Token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
             auth.TokenExpiresOn = jwtSecurityToken.ValidTo.ToLocalTime();
             auth.Message = "SignUp Succeeded";
@@ -194,7 +194,7 @@ namespace Infrastructur.Identity.Services
             auth.Email = user.Email;
             auth.Roles = roles.ToList();
             auth.ISAuthenticated = true;
-            auth.UserName = user.Name;
+            auth.UserName = user.UserName;
             auth.Token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
             auth.TokenExpiresOn = jwtSecurityToken.ValidTo;
             auth.Message = "Login Succeeded ";
@@ -289,7 +289,7 @@ namespace Infrastructur.Identity.Services
             auth.Email = user.Email;
             auth.Roles = roles.ToList();
             auth.ISAuthenticated = true;
-            auth.UserName = user.Name;
+            auth.UserName = user.UserName;
             auth.Token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
             auth.TokenExpiresOn = jwtSecurityToken.ValidTo;
             auth.RefreshToken = newRefreshToken.Token;

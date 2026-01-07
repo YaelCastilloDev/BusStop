@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Infrastructur.Data.Configurations
+namespace Infrastructure.Data.Configurations
 {
     public class CommentReactionConfiguration : IEntityTypeConfiguration<CommentReaction>
     {
@@ -10,25 +10,22 @@ namespace Infrastructur.Data.Configurations
         {
             builder.ToTable("comments_reactions");
 
-            // Primary Key is users_id
-            builder.HasKey(e => e.UserId);
+            // CHANGE: Order matches SQL PRIMARY KEY (`users_id`, `comments_id`)
+            builder.HasKey(e => new { e.UserId, e.CommentId });
 
-            // BINARY(16) to Guid conversion and column names
-            builder.Property(e => e.UserId).HasColumnName("users_id").HasConversion<byte[]>();
             builder.Property(e => e.CommentId).HasColumnName("comments_id").HasConversion<byte[]>();
-            builder.Property(e => e.Liked).HasColumnType("tinyint");
+            builder.Property(e => e.UserId).HasColumnName("users_id").HasConversion<byte[]>();
+            builder.Property(e => e.Liked).HasColumnName("liked");
 
-            // FK: fk_comments_reactions_comments1 (Reaction -> Comment)
             builder.HasOne(d => d.Comment)
                 .WithMany(p => p.Reactions)
                 .HasForeignKey(d => d.CommentId)
                 .HasConstraintName("fk_comments_reactions_comments1")
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // FK: fk_comments_reactions_users1 (Reaction -> User) - One-to-one relationship
             builder.HasOne(d => d.User)
-                .WithOne(p => p.CommentReaction)
-                .HasForeignKey<CommentReaction>(d => d.UserId)
+                .WithMany(p => p.CommentReactions)
+                .HasForeignKey(d => d.UserId)
                 .HasConstraintName("fk_comments_reactions_users1")
                 .OnDelete(DeleteBehavior.NoAction);
         }
