@@ -18,12 +18,12 @@ namespace Infrastructur.Identity.Services
 {
     public class AuthResponseService : IAuthResponse
     {
-        private readonly UserManager<AppUser> _userManager;
+        private readonly UserManager<UserCredential> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IEmailService _emailSender;
         private readonly JWT _Jwt;
 
-        public AuthResponseService(UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager, IOptions<JWT> jwt, IEmailService emailSender)
+        public AuthResponseService(UserManager<UserCredential> userManager, RoleManager<IdentityRole> roleManager, IOptions<JWT> jwt, IEmailService emailSender)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -34,7 +34,7 @@ namespace Infrastructur.Identity.Services
         #region create JWT
 
         // create JWT
-        private async Task<JwtSecurityToken> CreateJwtAsync(AppUser user) 
+        private async Task<JwtSecurityToken> CreateJwtAsync(UserCredential user) 
         {
             var userClaims = await _userManager.GetClaimsAsync(user);
             var roles = await _userManager.GetRolesAsync(user);
@@ -45,10 +45,9 @@ namespace Infrastructur.Identity.Services
 
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim("userId", user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Email, user.NormalizedEmail),
+                new Claim("userId", user.UsersId.ToString()),
             }
             .Union(userClaims)
             .Union(roleClaims);
@@ -76,7 +75,7 @@ namespace Infrastructur.Identity.Services
         #region Generate RefreshToken
 
         //Generate RefreshToken
-        private RefreshToken GenerateRefreshToken()
+        private Application.DTOs.Auth.RefreshToken GenerateRefreshToken()
         {
             var randomNumber = new byte[32];
 
@@ -84,7 +83,7 @@ namespace Infrastructur.Identity.Services
 
             generator.GetBytes(randomNumber);
 
-            return new RefreshToken
+            return new Application.DTOs.Auth.RefreshToken
             {
                 Token = Convert.ToBase64String(randomNumber),
                 ExpireOn = DateTime.UtcNow.AddDays(10),
@@ -112,10 +111,9 @@ namespace Infrastructur.Identity.Services
                 return new AuthResponse { Message = "Username is Already used ! " };
 
             //fill
-            var user = new AppUser
+            var user = new UserCredential
             {
-                UserName = model.Name,
-                Email = model.Email
+                NormalizedEmail = model.Email
             };
             
             var result = await _userManager.CreateAsync(user, model.Password);
@@ -141,7 +139,7 @@ namespace Infrastructur.Identity.Services
             await _emailSender.SendEmailAsync(e);
             await _emailSender.SendEmailAsync(new EmailRequest()
             {
-                ToEmail = user.Email,
+                ToEmail = user.NormalizedEmail,
                 Body = $"Please confirm your account by visiting this URL {verificationUri}",
                 Subject = "Confirm Registration"
             });
@@ -150,10 +148,9 @@ namespace Infrastructur.Identity.Services
 
             var jwtSecurityToken = await CreateJwtAsync(user);
 
-            auth.Email = user.Email;
+            auth.Email = user.NormalizedEmail;
             auth.Roles = new List<string> { "User" };
             auth.ISAuthenticated = true;
-            auth.UserName = user.UserName;
             auth.Token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
             auth.TokenExpiresOn = jwtSecurityToken.ValidTo.ToLocalTime();
             auth.Message = "SignUp Succeeded";
@@ -177,7 +174,7 @@ namespace Infrastructur.Identity.Services
         public async Task<AuthResponse> LoginAsync(Login model)
         {
             var auth = new AuthResponse();
-            var user = new AppUser();
+            var user = new UserCredential();
             user = await _userManager.FindByEmailAsync(model.Email);
             var userpass = await _userManager.CheckPasswordAsync(user, model.Password);
 
@@ -191,10 +188,9 @@ namespace Infrastructur.Identity.Services
 
             var roles = await _userManager.GetRolesAsync(user);
 
-            auth.Email = user.Email;
+            auth.Email = user.NormalizedEmail;
             auth.Roles = roles.ToList();
             auth.ISAuthenticated = true;
-            auth.UserName = user.UserName;
             auth.Token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
             auth.TokenExpiresOn = jwtSecurityToken.ValidTo;
             auth.Message = "Login Succeeded ";
@@ -286,7 +282,7 @@ namespace Infrastructur.Identity.Services
 
             var roles = await _userManager.GetRolesAsync(user);
 
-            auth.Email = user.Email;
+            auth.Email = user.NormalizedEmail;
             auth.Roles = roles.ToList();
             auth.ISAuthenticated = true;
             auth.UserName = user.UserName;
@@ -330,7 +326,7 @@ namespace Infrastructur.Identity.Services
 
         #region SendVerificationEmail
 
-        private async Task<string> SendVerificationEmail(AppUser user, string origin)
+        private async Task<string> SendVerificationEmail(UserCredential user, string origin)
         {
             //var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
@@ -339,7 +335,7 @@ namespace Infrastructur.Identity.Services
             var route = "api/Auth/confirm-email/";
 
             var _enpointUri = new Uri(string.Concat($"{origin}/", route));
-            var verificationUri = QueryHelpers.AddQueryString(_enpointUri.ToString(), "userId", user.Id.ToString());
+            var verificationUri = QueryHelpers.AddQueryString(_enpointUri.ToString(), "userId", user.UsersId.ToString());
             verificationUri = QueryHelpers.AddQueryString(verificationUri, "code", code);
             //Email Service Call Here
             return verificationUri;
@@ -352,11 +348,11 @@ namespace Infrastructur.Identity.Services
             var result = await _userManager.ConfirmEmailAsync(user, code);
             if (result.Succeeded)
             {
-                return $"Account Confirmed for {user.Email}. You can now use the /api/Account/authenticate endpoint.";
+                return $"Account Confirmed for {user.NormalizedEmail}. You can now use the /api/Account/authenticate endpoint.";
             }
             else
             {
-                throw new Exception($"An error occured while confirming {user.Email}.");
+                throw new Exception($"An error occured while confirming {user.NormalizedEmail}.");
             }
         }
 

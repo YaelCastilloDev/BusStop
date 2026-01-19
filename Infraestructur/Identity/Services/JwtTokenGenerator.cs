@@ -26,7 +26,6 @@ namespace Infrastructur.Identity.Services
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email!),
-                new Claim(JwtRegisteredClaimNames.Name, user.UserName!),
                 
                 // Role Claim (Used for authorization checks)
                 new Claim(ClaimTypes.Role, roleName)

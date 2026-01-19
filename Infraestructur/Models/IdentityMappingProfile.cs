@@ -10,7 +10,7 @@ namespace Infraestructur.Models
         public IdentityMappingProfile()
         {
             // Mapping from Infrastructure Model (AppUser) to Domain Entity (User)
-            CreateMap<AppUser, User>()
+            CreateMap<UserIdentity, User>()
                 .ReverseMap();
 
         }

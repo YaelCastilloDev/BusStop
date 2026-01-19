@@ -14,6 +14,6 @@ namespace Infraestructur.Identity.Models
         public DateTime CreatedOn { get; set; }
         public DateTime? RevokedOn { get; set; }
 
-        public AppUser User { get; set; } = null!;
+        public UserCredential User { get; set; } = null!;
     }
 }

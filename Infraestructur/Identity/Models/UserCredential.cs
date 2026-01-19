@@ -14,6 +14,9 @@ namespace Infraestructur.Identity.Models
         public string? PasswordHash { get; set; }
         public string? RefreshToken { get; set; }
 
+        public List<RefreshToken>? RefreshTokens { get; set; } //you must add a one to many relationship between UserCredential and RefreshTokens
+
+
         public User User { get; set; } = null!; // Propiedad 'User' requerida
     }
 }
