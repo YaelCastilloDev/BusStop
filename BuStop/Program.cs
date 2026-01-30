@@ -1,68 +1,110 @@
-// Program.cs (Updated)
-
 using Application.Services.Interfaces.Authentication;
+using Application.Services.Interfaces.Repositories;
+using Domain.Entities;
+using Infraestructur;
+using Infraestructur.Data; // Ensure this matches your ApplicationDbContext namespace
 using Infraestructur.Identity.Services;
 using Infraestructur.Models;
+using Infraestructur.Repositories;
+using Infrastructur.Identity.Services;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
+// --- 1. Configuration & Variables ---
 var licenseKey = builder.Configuration.GetValue<string>("AutoMapper:LicenseKey");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-
+// --- 2. Service Registration (MUST BE BEFORE builder.Build()) ---
 
 builder.Services.AddControllers();
+
+// MediatR
+builder.Services.AddMediatR(cfg => {
+    cfg.RegisterServicesFromAssembly(typeof(Application.Features.Auth.Commands.Register.RegisterUserCommand).Assembly);
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-// Add this with your other services
+
+// Auth Services
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
+builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
-// --- 2. Configure AutoMapper with the retrieved Key and Assembly Scan ---
-// Use the overload that takes a delegate (Action<IMapperConfigurationExpression>)
-// to set the LicenseKey, AND THEN use .AddAutoMapper(params Assembly[])
-// or a combined approach.
-
-// The most common approach is to use two steps or use the overload that accepts types:
-
-// Step A: Register AutoMapper and configure it (License Key)
-// Program.cs
-
-// Assuming licenseKey is already defined and loaded from configuration.
-
+// AutoMapper
 builder.Services.AddAutoMapper(cfg =>
 {
-    // 1. Configuration Delegate: Set the license key
-    if (!string.IsNullOrEmpty(licenseKey))
-    {
-        cfg.LicenseKey = licenseKey;
-    }
-
-    // 2. Profile Registration: Manually add the profile within the delegate
+    if (!string.IsNullOrEmpty(licenseKey)) cfg.LicenseKey = licenseKey;
     cfg.AddProfile(new IdentityMappingProfile());
-
-    // NOTE: If IdentityMappingProfile is in a separate assembly (which it is, in Infrastructure),
-    // you must ensure the application project has a reference to that assembly for 
-    // 'new IdentityMappingProfile()' to compile and for the runtime to find it.
-
-    // A slightly better way that uses the built-in scanning:
-    // cfg.AddMaps(typeof(IdentityMappingProfile).Assembly);
-
-}, typeof(IdentityMappingProfile)); // <-- Optionally pass the profile type here for AutoMapper to scan its assembly
+}, typeof(IdentityMappingProfile));
 
 builder.Services.AddMemoryCache();
 
-var app = builder.Build();
+// Database Context
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseMySql(
+        connectionString,
+        ServerVersion.AutoDetect(connectionString),
+        x => x.UseNetTopologySuite()
+    ));
 
-// ... rest of the code
+builder.Services.AddIdentity<User, Role>(options =>
+{
+    // Password settings (optional configuration)
+    options.Password.RequireDigit = true;
+    options.Password.RequiredLength = 8;
+    options.Password.RequireNonAlphanumeric = false;
+    options.User.RequireUniqueEmail = true;
+})
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultTokenProviders();
 
-// Configure the HTTP request pipeline.
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = "Bearer";
+    options.DefaultChallengeScheme = "Bearer";
+})
+.AddJwtBearer("Bearer", options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+    };
+});
+
+// Repositories
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IRouteRepository, RouteRepository>();
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+
+// --- 3. Build the Application ---
+var app = builder.Build(); // <--- The "Lock" happens here.
+
+// --- 4. Configure the HTTP request pipeline (Middleware) ---
+
 if (app.Environment.IsDevelopment())
 {
- //   app.UseSwagger();
- //   app.UseSwaggerUI();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
+
+// Authentication MUST come before Authorization
+app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
+
 app.Run();

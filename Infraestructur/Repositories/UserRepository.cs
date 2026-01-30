@@ -1,4 +1,5 @@
 ﻿using Application.Services.Interfaces.Repositories;
+using Domain.Common;
 using Domain.Entities;
 using Infraestructur.Identity.Models;
 using Microsoft.AspNetCore.Identity;
@@ -9,65 +10,143 @@ namespace Infraestructur.Repositories
 {
     public class UserRepository : IUserRepository
     {
-        private readonly UserManager<User> _userManager; // appuser
+        private readonly UserManager<UserCredential> _userManager;
         private readonly ApplicationDbContext _context;
 
-        public UserRepository(UserManager<User> userManager, ApplicationDbContext context)
+        public UserRepository(UserManager<UserCredential> userManager, ApplicationDbContext context)
         {
             _userManager = userManager;
-            _context = context; 
+            _context = context;
         }
 
-        public async Task<User?> FindByEmailAsync(string email) =>
-            await _userManager.FindByEmailAsync(email);
+        public async Task<User?> FindByEmailAsync(string email)
+        {
+            var credential = await _userManager.FindByEmailAsync(email);
+            return credential == null ? null : await GetDomainUserAsync(credential.Id);
+        }
 
-        public async Task<User?> FindByNameAsync(string name) =>
-            await _userManager.FindByNameAsync(name);
+        public async Task<User?> FindByIdAsync(string userId)
+        {
+            if (!Guid.TryParse(userId, out var guidId)) return null;
+            var credential = await _userManager.FindByIdAsync(userId);
+            return credential == null ? null : await GetDomainUserAsync(credential.Id);
+        }
 
-        public async Task<IdentityResult> CreateAsync(User user, string password) =>
-            await _userManager.CreateAsync(user, password);
-        
-        public async Task AddToRoleAsync(User user, string roleName) =>
-            await _userManager.AddToRoleAsync(user, roleName);
+        public async Task<Result> CreateAsync(User user, string password)
+        {
+            var credential = CreateCredential(user);
+            var identityResult = await _userManager.CreateAsync(credential, password);
 
-        public async Task<string> GenerateEmailConfirmationTokenAsync(User user) =>
-            await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            if (identityResult.Succeeded)
+            {
+                return Result.Success();
+            }
 
-        public async Task<IdentityResult> ConfirmEmailAsync(User user, string code) =>
-            await _userManager.ConfirmEmailAsync(user, code);
-        
-        public async Task<bool> CheckPasswordAsync(User user, string password) =>
-            await _userManager.CheckPasswordAsync(user, password);
-        
-        public async Task<IList<Claim>> GetClaimsAsync(User user) =>
-            await _userManager.GetClaimsAsync(user);
+            var error = string.Join(", ", identityResult.Errors.Select(e => e.Description));
+            return Result.Failure(error);
+        }
 
-        public async Task<IList<string>> GetRolesAsync(User user) =>
-            await _userManager.GetRolesAsync(user);
+        public async Task<Result> CreateAsyncWithThirdParty(User user)
+        {
+            // 1. Prepare the infrastructure model
+            var credential = CreateCredential(user);
 
-        public async Task UpdateAsync(User user) =>
-            await _userManager.UpdateAsync(user);
+            // 2. Execute via UserManager (returns IdentityResult)
+            var identityResult = await _userManager.CreateAsync(credential);
 
-        public async Task<User?> FindByIdAsync(string userId) =>
-            await _userManager.FindByIdAsync(userId);
-        
-        public async Task<bool> IsInRoleAsync(User user, string roleName) =>
-            await _userManager.IsInRoleAsync(user, roleName);
+            // 3. Map to your Domain.Common.Result
+            if (identityResult.Succeeded)
+            {
+                return Result.Success();
+            }
+
+            // Combine Identity errors (e.g., "User already exists") into one string
+            var errorMessages = string.Join(", ", identityResult.Errors.Select(e => e.Description));
+
+            return Result.Failure(errorMessages);
+        }
+
+        public async Task<Result> ConfirmEmailAsync(User user, string code)
+        {
+            var credential = await _userManager.FindByIdAsync(user.Id.ToString());
+            if (credential == null) return Result.Failure("User credentials not found.");
+
+            var result = await _userManager.ConfirmEmailAsync(credential, code);
+            if (result.Succeeded) return Result.Success();
+
+            var error = string.Join(", ", result.Errors.Select(e => e.Description));
+            return Result.Failure(error);
+        }
+
+        public async Task<Result> AddToRoleAsync(User user, string roleName)
+        {
+            var credential = await _userManager.FindByIdAsync(user.Id.ToString());
+            if (credential == null) return Result.Failure("User credentials not found.");
+
+            var result = await _userManager.AddToRoleAsync(credential, roleName);
+            if (result.Succeeded) return Result.Success();
+
+            var error = string.Join(", ", result.Errors.Select(e => e.Description));
+            return Result.Failure(error);
+        }
+
+        public async Task<Result> UpdateAsync(User user)
+        {
+            // First update the Domain Entity in the routes/stops/users table
+            _context.Users.Update(user);
+
+            // Then update the Identity Credential if necessary
+            var credential = await _userManager.FindByIdAsync(user.Id.ToString());
+            if (credential != null)
+            {
+                credential.Email = user.Email;
+                credential.UserName = user.Email;
+                await _userManager.UpdateAsync(credential);
+            }
+
+            await _context.SaveChangesAsync();
+            return Result.Success();
+        }
+
+        public async Task<bool> CheckPasswordAsync(User user, string password)
+        {
+            var credential = await _userManager.FindByIdAsync(user.Id.ToString());
+            return credential != null && await _userManager.CheckPasswordAsync(credential, password);
+        }
+
+        public async Task<IList<Claim>> GetClaimsAsync(User user)
+        {
+            var credential = await _userManager.FindByIdAsync(user.Id.ToString());
+            return credential != null ? await _userManager.GetClaimsAsync(credential) : new List<Claim>();
+        }
 
         public async Task<User?> GetUserByRefreshTokenAsync(string token)
         {
-            var userIds = await _context.Database
-                .SqlQueryRaw<Guid>("SELECT UserId FROM refresh_tokens WHERE Token = {0}", token)
-                .ToListAsync();
+            // Looking specifically for the refresh token in our UserCredentials table
+            var credential = await _context.Set<UserCredential>()
+                .FirstOrDefaultAsync(c => c.RefreshToken == token);
 
-            var userId = userIds.FirstOrDefault(); 
+            return credential == null ? null : await GetDomainUserAsync(credential.Id);
+        }
 
-            if (userId == Guid.Empty)
+        // --- PRIVATE HELPERS ---
+
+        private async Task<User?> GetDomainUserAsync(Guid id)
+        {
+            return await _context.Users
+                .Include(u => u.Roles) // Good practice to include roles
+                .FirstOrDefaultAsync(u => u.Id == id);
+        }
+
+        private UserCredential CreateCredential(User user)
+        {
+            return new UserCredential
             {
-                return null;
-            }
-
-            return await _userManager.FindByIdAsync(userId.ToString());
+                Id = user.Id,
+                UserName = user.Email,
+                Email = user.Email,
+                User = user
+            };
         }
     }
 }

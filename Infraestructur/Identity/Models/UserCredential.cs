@@ -1,22 +1,18 @@
-﻿using Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Identity;
+using Domain.Entities;
 
 namespace Infraestructur.Identity.Models
 {
-    public class UserCredential
+    // This represents the 'user_credentials' table
+    public class UserCredential : IdentityUser<Guid>
     {
-        public Guid UsersId { get; set; }
-        public string? NormalizedEmail { get; set; }
-        public string? PasswordHash { get; set; }
-        public string? RefreshToken { get; set; }
+        // IdentityUser already has PasswordHash, NormalizedEmail, and Id.
+        // We map 'Id' to your 'users_id' column in the DbContext.
 
-        public List<RefreshToken>? RefreshTokens { get; set; } //you must add a one to many relationship between UserCredential and RefreshTokens
+        public string? RefreshToken { get; set; } //shouldnt use it 
+        public List<RefreshToken> RefreshTokens = new List<RefreshToken>();
 
-
-        public User User { get; set; } = null!; // Propiedad 'User' requerida
+        // Navigation property to the Domain User
+        public virtual User User { get; set; } = null!;
     }
 }

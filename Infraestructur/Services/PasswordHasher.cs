@@ -1,22 +1,25 @@
-﻿using Org.BouncyCastle.Crypto.Generators;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using BCrypt.Net;
+﻿using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
-using Domain.Entities;
-using Infraestructur.Identity.Models;
 
 namespace Infraestructur.Services
 {
-    public class PasswordHasher : IPasswordHasher<AppUser> // TUser
+    // Update the generic type to User
+    public class PasswordHasher : IPasswordHasher<User>
     {
-        public string HashPassword(string password) =>
-            BCrypt.Net.BCrypt.HashPassword(password);
+        // Interface implementation: HashPassword
+        public string HashPassword(User user, string password)
+        {
+            return BCrypt.Net.BCrypt.HashPassword(password);
+        }
 
-        public bool VerifyPassword(string password, string hashedPassword) =>
-            BCrypt.Net.BCrypt.Verify(password, hashedPassword);
+        // Interface implementation: VerifyHashedPassword
+        public PasswordVerificationResult VerifyHashedPassword(User user, string hashedPassword, string providedPassword)
+        {
+            bool isValid = BCrypt.Net.BCrypt.Verify(providedPassword, hashedPassword);
+
+            return isValid
+                ? PasswordVerificationResult.Success
+                : PasswordVerificationResult.Failed;
+        }
     }
 }

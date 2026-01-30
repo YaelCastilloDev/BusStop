@@ -2,7 +2,7 @@
 
 namespace Application.DTOs.Auth
 {
-    public class Login
+    public class LoginDto
     {
         [Required]
         [EmailAddress]

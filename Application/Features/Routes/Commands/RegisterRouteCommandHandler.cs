@@ -19,8 +19,7 @@ namespace Application.Features.Routes.Commands
             {
                 Id = Guid.NewGuid(),
                 Name = request.Name,
-                CreatedBy = request.UserId, 
-                Description = request.Description,
+                CreatedBy = request.IdCreator, 
             };
             await _routeRepository.AddAsync(route);
 

@@ -8,17 +8,15 @@ namespace Application.Mappings
     {
         public UserProfile()
         {
-            CreateMap<SignUp, User>()
+            CreateMap<SignUpDto, User>()
                 .ForMember(
-                    dest => dest.UserName,
+                    dest => dest.Name, // Change from UserName to Name
                     opt => opt.MapFrom(src => src.Name)
                 )
                 .ForMember(
                     dest => dest.Email,
                     opt => opt.MapFrom(src => src.Email)
                 );
-
-
         }
     }
 }

@@ -28,7 +28,7 @@ namespace Infraestructur.Services
             _logger = logger;
         }
 
-        public async Task SendEmailAsync(EmailRequest request)
+        public async Task SendEmailAsync(EmailRequestDto request)
         {
             try
             {

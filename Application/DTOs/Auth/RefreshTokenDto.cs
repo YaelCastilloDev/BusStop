@@ -4,7 +4,7 @@
 namespace Application.DTOs.Auth
 {
     [Owned]
-    public class RefreshToken
+    public class RefreshTokenDto
     {
         public string Token { get; set; }
 

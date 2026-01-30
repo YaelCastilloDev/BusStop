@@ -1,99 +1,99 @@
 ﻿using Application.DTOs.Auth;
-using Application.Features.Auth.Commands.GoogleLogin; // O el namespace correcto de tu comando
 using Application.Features.Auth.Commands.Login.GoogleLogin;
 using Application.Services.Interfaces.Authentication;
 using Application.Services.Interfaces.Repositories;
+using Domain.Common;
 using Domain.Entities;
 using MediatR;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Application.Features.Auth.Commands.GoogleLogin
 {
-    public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, AuthResponse>
+    public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, AuthResponseDto>
     {
         private readonly IUserRepository _userRepository;
-        private readonly IGoogleAuthService _googleAuthService;
-        private readonly IJwtTokenGenerator _jwtTokenGenerator; // Asegúrate de tener esta interfaz
+        private readonly IUserIdentityRepository _identityRepository;
         private readonly IRoleRepository _roleRepository;
+        private readonly IGoogleAuthService _googleAuthService;
+        private readonly IJwtTokenGenerator _jwtTokenGenerator;
 
         public GoogleLoginCommandHandler(
             IUserRepository userRepository,
+            IUserIdentityRepository identityRepository,
+            IRoleRepository roleRepository,
             IGoogleAuthService googleAuthService,
-            IJwtTokenGenerator jwtTokenGenerator,
-            IRoleRepository roleRepository)
+            IJwtTokenGenerator jwtTokenGenerator)
         {
             _userRepository = userRepository;
+            _identityRepository = identityRepository;
+            _roleRepository = roleRepository;
             _googleAuthService = googleAuthService;
             _jwtTokenGenerator = jwtTokenGenerator;
-            _roleRepository = roleRepository;
         }
 
-        public async Task<AuthResponse> Handle(GoogleLoginCommand request, CancellationToken cancellationToken)
+        public async Task<AuthResponseDto> Handle(GoogleLoginCommand request, CancellationToken cancellationToken)
         {
-            // 1. Validar Token con Google
+            // 1. Validate Token with Google
             var payload = await _googleAuthService.ValidateGoogleTokenAsync(request.IdToken);
 
-            // 2. Verificar si el usuario existe usando el REPOSITORIO
+            // 2. Check if user exists by Email
             var user = await _userRepository.FindByEmailAsync(payload.Email);
+
+            // Inside Handle method...
 
             if (user == null)
             {
-                // --- REGISTRAR NUEVO USUARIO ---
-
-                // Usar repositorio para obtener rol
-                var userRole = await _roleRepository.GetRoleByNameAsync("User");
-                if (userRole == null) throw new Exception("Default role not found.");
-
                 user = new User
                 {
+                    Id = Guid.NewGuid(),
+                    Name = payload.Name,
                     Email = payload.Email,
-                    UserName = payload.Email,
-                    GoogleId = payload.Subject,
-                    RoleId = userRole.Id,
-                    EmailConfirmed = true // Fuente confiable
+                    EmailVerified = true,
+                    CreatedAt = DateTime.UtcNow
                 };
 
-                // Usar repositorio para crear usuario
-                // Nota: CreateAsync generalmente pide password. Para usuarios de Google,
-                // puedes generar un password aleatorio fuerte o modificar tu repositorio
-                // para aceptar creación sin password si Identity lo permite.
-                // Aquí asumo que Identity requiere password, así que generamos uno aleatorio.
-                var randomPassword = "Google_" + Guid.NewGuid().ToString("N") + "!";
-                var result = await _userRepository.CreateAsync(user, randomPassword);
+                // FIX 1: This now uses the passwordless overload we just added
+                Result result = await _userRepository.CreateAsyncWithThirdParty(user);
+                if (!result.IsSuccess) throw new Exception("Error creating user");
 
-                if (!result.Succeeded)
+                // FIX 2: Use the correct method name GetRoleByNameAsync
+                var defaultRole = await _roleRepository.GetRoleByNameAsync("User");
+                if (defaultRole != null)
                 {
-                    throw new Exception("Failed to create Google user");
+                    await _roleRepository.AssignRoleToUserAsync(user.Id, defaultRole.Id);
                 }
+
+                await _identityRepository.AddIdentityAsync(user.Id, "Google", payload.Subject);
             }
             else
             {
-                // --- USUARIO EXISTE, VINCULAR CUENTA SI ES NECESARIO ---
-                if (string.IsNullOrEmpty(user.GoogleId))
+                // --- SCENARIO B: EXISTING USER ---
+
+                // Check if link exists using our new bool method
+                bool isLinked = await _identityRepository.ExistsByProviderAsync(user.Id, "Google");
+
+                if (!isLinked)
                 {
-                    user.GoogleId = payload.Subject;
-                    // Usar repositorio para actualizar
-                    await _userRepository.UpdateAsync(user);
+                    // Link the Google account using primitives
+                    await _identityRepository.AddIdentityAsync(user.Id, "Google", payload.Subject);
                 }
             }
 
-            // 3. Generar Nuestro Token JWT
-            // Obtenemos el nombre del rol (asumiendo "User" o lógica más compleja)
-            // Si necesitamos el rol exacto de la BD:
-            // var roles = await _userRepository.GetRolesAsync(user);
-            // var roleName = roles.FirstOrDefault() ?? "User";
-            var roleName = "User";
+            // 3. Generate JWT
+            var userRoles = await _roleRepository.GetUserRolesAsync(user.Id);
+            var roleName = userRoles.FirstOrDefault()?.Name ?? "User";
 
             var token = _jwtTokenGenerator.GenerateToken(user, roleName);
 
-            return new AuthResponse
+            return new AuthResponseDto
             {
                 Token = token,
                 Success = true,
                 Email = user.Email,
-                UserName = user.UserName,
+                UserName = user.Name,
                 ISAuthenticated = true,
                 Message = "Google Login Successful"
             };

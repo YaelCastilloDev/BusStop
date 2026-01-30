@@ -3,11 +3,11 @@ using System.Text.Json.Serialization;
 
 namespace Application.DTOs.Auth
 {
-    public class AuthResponse
+    public class AuthResponseDto
     {
         public string? Message { get; set; }
 
-        public Boolean ? Success { get; set; }
+        public bool  Success { get; set; }
 
         public bool ISAuthenticated { get; set; }
 

@@ -1,6 +1,6 @@
 ﻿namespace Application.DTOs.Auth
 {
-    public class RevokeToken
+    public class RevokeTokenDto
     {
         public string? Token { get; set; }
     }

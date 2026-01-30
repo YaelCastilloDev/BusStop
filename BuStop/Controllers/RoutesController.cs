@@ -9,7 +9,7 @@ namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] // Requires JWT Token
+    [Authorize]
     public class RoutesController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -22,15 +22,16 @@ namespace WebApi.Controllers
         [HttpPost("Register")]
         public async Task<IActionResult> RegisterRoute([FromBody] RegisterRouteDto dto)
         {
-            // 1. Get User ID from the JWT Token claims
+            // 1. Get User ID safely from Token
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                              ?? User.FindFirst("userId")?.Value;
+                           ?? User.FindFirst("sub")?.Value; // 'sub' is standard for OIDC/Google
 
-            if (userIdClaim == null) return Unauthorized();
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized(new { Message = "User ID not found in token" });
+            }
 
-            var userId = Guid.Parse(userIdClaim);
-
-            // 2. Create the Command
+            // 2. Create the Command (Mapping DTO + Token Data)
             var command = new RegisterRouteCommand(
                 dto.Name,
                 dto.Description,
@@ -41,8 +42,12 @@ namespace WebApi.Controllers
             // 3. Send to Handler
             var routeId = await _mediator.Send(command);
 
-            // 4. Return Result
-            return Ok(new { RouteId = routeId, Message = "Route registered successfully" });
+            // 4. Return Created (201) status for new resources
+            return CreatedAtAction(nameof(RegisterRoute), new { id = routeId }, new
+            {
+                RouteId = routeId,
+                Message = "Route registered successfully"
+            });
         }
     }
 }

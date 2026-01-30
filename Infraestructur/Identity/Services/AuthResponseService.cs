@@ -47,7 +47,7 @@ namespace Infrastructur.Identity.Services
             {
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.NormalizedEmail),
-                new Claim("userId", user.UsersId.ToString()),
+                new Claim("userId", user.Id.ToString()),
             }
             .Union(userClaims)
             .Union(roleClaims);
@@ -75,7 +75,7 @@ namespace Infrastructur.Identity.Services
         #region Generate RefreshToken
 
         //Generate RefreshToken
-        private Application.DTOs.Auth.RefreshToken GenerateRefreshToken()
+        private  Infraestructur.Identity.Models.RefreshToken GenerateRefreshToken()
         {
             var randomNumber = new byte[32];
 
@@ -83,11 +83,11 @@ namespace Infrastructur.Identity.Services
 
             generator.GetBytes(randomNumber);
 
-            return new Application.DTOs.Auth.RefreshToken
+            return new Infraestructur.Identity.Models.RefreshToken
             {
                 Token = Convert.ToBase64String(randomNumber),
-                ExpireOn = DateTime.UtcNow.AddDays(10),
-                CreateOn = DateTime.UtcNow
+                ExpiresOn = DateTime.UtcNow.AddDays(10),
+                CreatedOn = DateTime.UtcNow
             };
         }
 
@@ -96,19 +96,19 @@ namespace Infrastructur.Identity.Services
         #region SignUp Method
 
         //SignUp
-        public async Task<AuthResponse> SignUpAsync(SignUp model, string orgin)
+        public async Task<AuthResponseDto> SignUpAsync(SignUpDto model, string orgin)
         {
-            var auth = new AuthResponse();
+            var auth = new AuthResponseDto();
 
             var userEmail = await _userManager.FindByEmailAsync(model.Email);
             var userName = await _userManager.FindByNameAsync(model.Name);
 
             //checking the Email and username
             if (userEmail is not null)
-                return new AuthResponse { Message = "Email is Already used ! " };
+                return new AuthResponseDto { Message = "Email is Already used ! " };
 
             if (userName is not null)
-                return new AuthResponse { Message = "Username is Already used ! " };
+                return new AuthResponseDto { Message = "Username is Already used ! " };
 
             //fill
             var user = new UserCredential
@@ -127,17 +127,17 @@ namespace Infrastructur.Identity.Services
                     errors += $"{error.Description}, ";
                 }
 
-                return new AuthResponse { Message = errors };
+                return new AuthResponseDto { Message = errors };
             }
 
             //assign role to user by default
             await _userManager.AddToRoleAsync(user, "User");
 
             #region SendVerificationEmail
-            EmailRequest e = new EmailRequest();
+            EmailRequestDto e = new EmailRequestDto();
             var verificationUri = await SendVerificationEmail(user, orgin);
             await _emailSender.SendEmailAsync(e);
-            await _emailSender.SendEmailAsync(new EmailRequest()
+            await _emailSender.SendEmailAsync(new EmailRequestDto()
             {
                 ToEmail = user.NormalizedEmail,
                 Body = $"Please confirm your account by visiting this URL {verificationUri}",
@@ -158,7 +158,7 @@ namespace Infrastructur.Identity.Services
             // create new refresh token
             var newRefreshToken = GenerateRefreshToken();
             auth.RefreshToken = newRefreshToken.Token;
-            auth.RefreshTokenExpiration = newRefreshToken.ExpireOn;
+            auth.RefreshTokenExpiration = newRefreshToken.ExpiresOn;
 
             user.RefreshTokens.Add(newRefreshToken);
             await _userManager.UpdateAsync(user);
@@ -171,9 +171,9 @@ namespace Infrastructur.Identity.Services
         #region Login Method
 
         //login
-        public async Task<AuthResponse> LoginAsync(Login model)
+        public async Task<AuthResponseDto> LoginAsync(LoginDto model)
         {
-            var auth = new AuthResponse();
+            var auth = new AuthResponseDto();
             var user = new UserCredential();
             user = await _userManager.FindByEmailAsync(model.Email);
             var userpass = await _userManager.CheckPasswordAsync(user, model.Password);
@@ -200,14 +200,14 @@ namespace Infrastructur.Identity.Services
             {
                 var activeRefreshToken = user.RefreshTokens.FirstOrDefault(t => t.IsActive);
                 auth.RefreshToken = activeRefreshToken.Token;
-                auth.RefreshTokenExpiration = activeRefreshToken.ExpireOn;
+                auth.RefreshTokenExpiration = activeRefreshToken.ExpiresOn;
             }
             else
             //in case user has no active refresh token
             {
                 var newRefreshToken = GenerateRefreshToken();
                 auth.RefreshToken = newRefreshToken.Token;
-                auth.RefreshTokenExpiration = newRefreshToken.ExpireOn;
+                auth.RefreshTokenExpiration = newRefreshToken.ExpiresOn;
 
                 user.RefreshTokens.Add(newRefreshToken);
                 await _userManager.UpdateAsync(user);
@@ -222,7 +222,7 @@ namespace Infrastructur.Identity.Services
 
 
         //Assign Roles
-        public async Task<string> AssignRolesAsync(AssignRoles model)
+        public async Task<string> AssignRolesAsync(AssignRolesDto model)
         {
             var user = await _userManager.FindByIdAsync(model.UserId);
             var role = await _roleManager.RoleExistsAsync(model.Role);
@@ -249,9 +249,9 @@ namespace Infrastructur.Identity.Services
         #region check Refresh Tokens method
 
         //check Refresh Tokens
-        public async Task<AuthResponse> RefreshTokenCheckAsync(string token)
+        public async Task<AuthResponseDto> RefreshTokenCheckAsync(string token)
         {
-            var auth = new AuthResponse();
+            var auth = new AuthResponseDto();
 
             //find the user that match the sent refresh token
             var user = await _userManager.Users.FirstOrDefaultAsync(u => u.RefreshTokens.Any(t => t.Token == token));
@@ -285,11 +285,11 @@ namespace Infrastructur.Identity.Services
             auth.Email = user.NormalizedEmail;
             auth.Roles = roles.ToList();
             auth.ISAuthenticated = true;
-            auth.UserName = user.UserName;
+           // auth.UserName = user.UserName;
             auth.Token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
             auth.TokenExpiresOn = jwtSecurityToken.ValidTo;
             auth.RefreshToken = newRefreshToken.Token;
-            auth.RefreshTokenExpiration = newRefreshToken.ExpireOn;
+            auth.RefreshTokenExpiration = newRefreshToken.ExpiresOn;
 
             return auth;
         }
@@ -335,7 +335,7 @@ namespace Infrastructur.Identity.Services
             var route = "api/Auth/confirm-email/";
 
             var _enpointUri = new Uri(string.Concat($"{origin}/", route));
-            var verificationUri = QueryHelpers.AddQueryString(_enpointUri.ToString(), "userId", user.UsersId.ToString());
+            var verificationUri = QueryHelpers.AddQueryString(_enpointUri.ToString(), "userId", user.Id.ToString());
             verificationUri = QueryHelpers.AddQueryString(verificationUri, "code", code);
             //Email Service Call Here
             return verificationUri;

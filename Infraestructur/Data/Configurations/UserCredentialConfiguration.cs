@@ -10,16 +10,18 @@ public class UserCredentialConfiguration : IEntityTypeConfiguration<UserCredenti
     public void Configure(EntityTypeBuilder<UserCredential> builder)
     {
         builder.ToTable("user_credentials");
-        builder.HasKey(e => e.UsersId);
-        
-        builder.Property(e => e.UsersId).HasColumnName("users_id").HasConversion<byte[]>();
+        builder.HasKey(e => e.Id); // Use Id
+
+        builder.Property(e => e.Id)
+               .HasColumnName("users_id"); // Your SQL column name
+
         builder.Property(e => e.NormalizedEmail).HasColumnName("normalized_email").HasMaxLength(45);
         builder.Property(e => e.PasswordHash).HasColumnName("password_hash").HasMaxLength(255);
         builder.Property(e => e.RefreshToken).HasColumnName("refresh_token").HasMaxLength(255);
 
         builder.HasOne(d => d.User)
-            .WithOne() // Assuming User doesn't need a back-reference to Credentials in Domain
-            .HasForeignKey<UserCredential>(d => d.UsersId)
+            .WithOne()
+            .HasForeignKey<UserCredential>(d => d.Id) // Use Id
             .HasConstraintName("fk_user_credentials_users1");
     }
 }

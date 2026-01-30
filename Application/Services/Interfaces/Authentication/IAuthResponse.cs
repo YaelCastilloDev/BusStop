@@ -5,13 +5,13 @@ namespace Application.Services.Interfaces.Authentication
     public interface IAuthResponse
 
     {
-        Task<AuthResponse> SignUpAsync(SignUp model, string orgin);
+        Task<AuthResponseDto> SignUpAsync(SignUpDto model, string orgin);
 
-        Task<AuthResponse> LoginAsync(Login model);
+        Task<AuthResponseDto> LoginAsync(LoginDto model);
 
-        Task<string> AssignRolesAsync(AssignRoles model);
+        Task<string> AssignRolesAsync(AssignRolesDto model);
 
-        Task<AuthResponse> RefreshTokenCheckAsync(string token);
+        Task<AuthResponseDto> RefreshTokenCheckAsync(string token);
 
         Task<bool> RevokeTokenAsync(string token);
 

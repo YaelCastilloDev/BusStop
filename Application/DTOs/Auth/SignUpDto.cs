@@ -2,7 +2,7 @@
 
 namespace Application.DTOs.Auth
 {
-    public class SignUp
+    public class SignUpDto
     {
         // Corresponds to the single 'Name' field in your Domain.User.
         // It's the full name the user provides.

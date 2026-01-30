@@ -1,6 +1,6 @@
 ﻿namespace Application.DTOs.Auth
 {
-    public class LoginCommand
+    public class RegisterResponseDto
     {
     }
 }

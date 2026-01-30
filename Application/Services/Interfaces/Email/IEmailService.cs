@@ -3,7 +3,7 @@ namespace Application.Services.Interfaces.Email
 {
     public interface IEmailService
     {
-        Task SendEmailAsync(EmailRequest request);
+        Task SendEmailAsync(EmailRequestDto request);
 
     }
 }

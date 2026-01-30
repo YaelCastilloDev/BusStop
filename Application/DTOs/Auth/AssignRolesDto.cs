@@ -2,7 +2,7 @@
 
 namespace Application.DTOs.Auth
 {
-    public class AssignRoles
+    public class AssignRolesDto
     {
         [Required]
         public string UserId { get; set; }

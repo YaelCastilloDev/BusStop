@@ -1,63 +1,75 @@
-﻿
-using Application.DTOs.Auth;
-using Application.Services.Interfaces.Authentication; // <-- Fix for IJwtTokenGenerator
-using Application.Services.Interfaces.Repositories;  
+﻿using Application.DTOs.Auth;
+using Application.Services.Interfaces.Authentication;
+using Application.Services.Interfaces.Repositories;
 using Domain.Entities;
 using MediatR;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Application.Features.Auth.Commands.Register
 {
-    public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, AuthResponse>
+    public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, AuthResponseDto>
     {
-        private readonly UserManager<User> _userManager;
-        private readonly IAuthResponse _jwtTokenGenerator;
-        private readonly IRoleRepository _roleRepository; // <-- CHANGE THIS
+        // Use IUserRepository to keep the Application layer clean
+        private readonly IUserRepository _userRepository;
+        private readonly IJwtTokenGenerator _jwtTokenGenerator;
+        private readonly IRoleRepository _roleRepository;
 
-        // --- Update the constructor ---
         public RegisterUserCommandHandler(
-            UserManager<User> userManager,
-            IAuthResponse jwtTokenGenerator,
-            IRoleRepository roleRepository) // <-- CHANGE THIS
+            IUserRepository userRepository,
+            IJwtTokenGenerator jwtTokenGenerator,
+            IRoleRepository roleRepository)
         {
-            _userManager = userManager;
+            _userRepository = userRepository;
             _jwtTokenGenerator = jwtTokenGenerator;
-            _roleRepository = roleRepository; // <-- CHANGE THIS
+            _roleRepository = roleRepository;
         }
 
-        public async Task<AuthResponse> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
+        public async Task<AuthResponseDto> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
         {
-            var existingUser = await _userManager.FindByEmailAsync(request.Email);
+            // 1. Check if email is already in use
+            var existingUser = await _userRepository.FindByEmailAsync(request.Email);
             if (existingUser != null) throw new Exception("Email already in use.");
 
-            // --- Use the repository to get the role ---
+            // 2. Fetch the default role
             var userRole = await _roleRepository.GetRoleByNameAsync("User");
             if (userRole == null) throw new Exception("Default 'User' role not found.");
 
-            var model = new SignUp
+            // 3. Create the Domain Entity
+            var newUser = new User
             {
+                Id = Guid.NewGuid(),
+                Name = request.Username, // Mapping Username from command to Name in Entity
                 Email = request.Email,
-                UserName = request.Username,
+                EmailVerified = false,
+                CreatedAt = DateTime.UtcNow
             };
 
-            var result = await _userManager.CreateAsync(newUser, request.Password);
+            // 4. Persist the user via the Repository
+            var result = await _userRepository.CreateAsync(newUser, request.Password);
 
-            if (!result.Succeeded)
+            if (!result.IsSuccess)
             {
-                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                var errors = string.Join(", ", result.Error);
                 throw new Exception($"Registration failed: {errors}");
             }
 
-            // Generate Token
-            var token = _jwtTokenGenerator.SignUpAsync(newUser, userRole.Name);
+            // 5. Assign the Role (Many-to-Many logic handled by repository)
+            await _roleRepository.AssignRoleToUserAsync(newUser.Id, userRole.Id);
 
-            return new AuthResponse
+            // 6. Generate the JWT Token
+            var token = _jwtTokenGenerator.GenerateToken(newUser, userRole.Name);
+
+            return new AuthResponseDto
             {
                 Token = token,
                 Success = true,
-                // ... fill out other AuthResponse properties
+                Email = newUser.Email,
+                UserName = newUser.Name,
+                ISAuthenticated = true,
+                Message = "User registered successfully"
             };
         }
     }

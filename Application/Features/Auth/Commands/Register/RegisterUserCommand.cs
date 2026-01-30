@@ -7,5 +7,5 @@ namespace Application.Features.Auth.Commands.Register
         string Username,
         string Email,
         string Password
-    ) : IRequest<AuthResponse>;
+    ) : IRequest<AuthResponseDto>;
 }
