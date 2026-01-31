@@ -1,56 +1,59 @@
-﻿using Domain.Entities;
+﻿// Infraestructur/ApplicationDbContext.cs
+using Domain.Entities;
 using Infraestructur.Identity.Models;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore; // Required
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infraestructur
+public class ApplicationDbContext : IdentityDbContext<UserCredential, AppRole, Guid>
 {
-    // Inherit from IdentityDbContext to enable Identity features
-    // Pass <UserCredential, IdentityRole<Guid>, Guid>
-    public class ApplicationDbContext : IdentityDbContext<UserCredential, IdentityRole<Guid>, Guid>
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
+
+    public DbSet<User> DomainUsers { get; set; } // Tu tabla 'users'
+    public DbSet<User> Users { get; set; }
+    public DbSet<Route> Routes { get; set; }
+    public DbSet<Stop> Stops { get; set; }
+    public DbSet<Comment> Comments { get; set; }
+    public DbSet<CommentReaction> CommentReactions { get; set; }
+    public DbSet<UserIdentity> UserIdentities { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-            : base(options)
-        {
-        }
+        // 1. PRIMERO: Configuración base de Identity
+        base.OnModelCreating(modelBuilder);
 
-        // Keep your Domain sets
-        public DbSet<User> Users { get; set; }
-        public DbSet<Route> Routes { get; set; }
-        public DbSet<Stop> Stops { get; set; }
-        public DbSet<Comment> Comments { get; set; }
-        public DbSet<CommentReaction> CommentReactions { get; set; }
-        public DbSet<UserIdentity> UserIdentities { get; set; }
-        // Note: You don't need DbSet<UserCredential> because IdentityDbContext handles it
+        // 2. Mapear 'UserCredential' a 'user_credentials'
+        modelBuilder.Entity<UserCredential>(entity => {
+            entity.ToTable("user_credentials");
+            entity.Property(e => e.Id).HasColumnName("users_id");
+        });
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            // Always call the base first for Identity configuration
-            base.OnModelCreating(modelBuilder);
+        // 3. Mapear 'AppRole' a tu tabla 'roles'
+        modelBuilder.Entity<AppRole>(entity => {
+            entity.ToTable("roles");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Name).HasColumnName("name");
 
-            modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+            // Ignoramos columnas innecesarias de Identity si tu tabla no las tiene
+            entity.Ignore(r => r.ConcurrencyStamp);
+            entity.Ignore(r => r.NormalizedName);
+        });
 
-            // 1. Map Identity User to your 'user_credentials' table
-            modelBuilder.Entity<UserCredential>(entity =>
-            {
-                entity.ToTable("user_credentials");
-                // Maps Identity's internal "Id" to your SQL "users_id"
-                entity.Property(e => e.Id).HasColumnName("users_id");
-            });
+        // 4. Mapear la tabla intermedia IdentityUserRole a 'roles_has_users'
+        modelBuilder.Entity<IdentityUserRole<Guid>>(entity => {
+            entity.ToTable("roles_has_users");
+            entity.HasKey(r => new { r.UserId, r.RoleId });
+            entity.Property(e => e.UserId).HasColumnName("users_id");
+            entity.Property(e => e.RoleId).HasColumnName("roles_id");
+        });
 
-            // 2. Map Domain User to your 'users' table
-            modelBuilder.Entity<User>(entity =>
-            {
-                entity.ToTable("users");
-                entity.HasKey(e => e.Id);
-            });
+        // 5. Tu tabla 'users' de dominio
+        modelBuilder.Entity<User>(entity => {
+            entity.ToTable("users");
+            entity.HasKey(e => e.Id);
+        });
 
-            // 3. Define the 1:1 relationship between Domain and Identity
-            modelBuilder.Entity<UserCredential>()
-                .HasOne(c => c.User)
-                .WithOne()
-                .HasForeignKey<UserCredential>(c => c.Id);
-        }
+        // Otros mapeos de tu ensamblado
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
     }
 }

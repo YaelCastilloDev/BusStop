@@ -92,10 +92,9 @@ namespace Infraestructur.Repositories
 
         public async Task<Result> UpdateAsync(User user)
         {
-            // First update the Domain Entity in the routes/stops/users table
-            _context.Users.Update(user);
+            // ERROR CORREGIDO: Usamos DomainUsers para la entidad de dominio
+            _context.DomainUsers.Update(user);
 
-            // Then update the Identity Credential if necessary
             var credential = await _userManager.FindByIdAsync(user.Id.ToString());
             if (credential != null)
             {
@@ -122,7 +121,7 @@ namespace Infraestructur.Repositories
 
         public async Task<User?> GetUserByRefreshTokenAsync(string token)
         {
-            // Looking specifically for the refresh token in our UserCredentials table
+            // ERROR CORREGIDO: Usamos el set específico para no confundir tipos
             var credential = await _context.Set<UserCredential>()
                 .FirstOrDefaultAsync(c => c.RefreshToken == token);
 
@@ -132,11 +131,13 @@ namespace Infraestructur.Repositories
         // --- PRIVATE HELPERS ---
 
         private async Task<User?> GetDomainUserAsync(Guid id)
-        {
-            return await _context.Users
-                .Include(u => u.Roles) // Good practice to include roles
-                .FirstOrDefaultAsync(u => u.Id == id);
-        }
+    {
+        // ERROR CORREGIDO: Usamos DomainUsers. Ahora .Include(u => u.Roles) funcionará
+        // porque la clase Domain.User SÍ tiene la propiedad Roles.
+        return await _context.DomainUsers
+            .Include(u => u.Roles) 
+            .FirstOrDefaultAsync(u => u.Id == id);
+    }
 
         private UserCredential CreateCredential(User user)
         {

@@ -1,6 +1,8 @@
 ﻿using Application.Services.Interfaces.Repositories;
 using Domain.Entities;
 using Infraestructur.Data;
+using Infraestructur.Identity.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -11,46 +13,60 @@ namespace Infraestructur.Repositories
 {
     public class RoleRepository : IRoleRepository
     {
-        private readonly ApplicationDbContext _context;
+private readonly RoleManager<AppRole> _roleManager;
+    private readonly UserManager<UserCredential> _userManager;
 
-        public RoleRepository(ApplicationDbContext context)
+    public RoleRepository(RoleManager<AppRole> roleManager, UserManager<UserCredential> userManager)
+    {
+        _roleManager = roleManager;
+        _userManager = userManager;
+    }
+
+    public async Task AssignRoleToUserAsync(Guid userId, Guid roleId)
+    {
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        var appRole = await _roleManager.FindByIdAsync(roleId.ToString());
+
+        if (user != null && appRole != null)
         {
-            _context = context;
+            await _userManager.AddToRoleAsync(user, appRole.Name!);
         }
+    }
 
-        public async Task<Role?> GetRoleByNameAsync(string roleName)
-        {
-            // Explicitly referencing Domain.Entities.Role
-            return await _context.Set<Role>()
-                .FirstOrDefaultAsync(r => r.Name == roleName);
-        }
+    public async Task<Role?> GetRoleByNameAsync(string roleName)
+    {
+        var appRole = await _roleManager.FindByNameAsync(roleName);
+        if (appRole == null) return null;
 
-        public async Task AssignRoleToUserAsync(Guid userId, int roleId)
-        {
-            // We use .Include(u => u.Roles) to load the ICollection<Role> 
-            // defined in your User Domain Entity
-            var user = await _context.Users
-                .Include(u => u.Roles)
-                .FirstOrDefaultAsync(u => u.Id == userId);
-
-            var role = await _context.Set<Role>().FindAsync(roleId);
-
-            if (user != null && role != null)
-            {
-                if (!user.Roles.Any(r => r.Id == roleId))
-                {
-                    user.Roles.Add(role);
-                    await _context.SaveChangesAsync();
-                }
-            }
-        }
+        return new Role { Id = appRole.Id, Name = appRole.Name! };
+    }
 
         public async Task<IEnumerable<Role>> GetUserRolesAsync(Guid userId)
         {
-            // This navigates the many-to-many relationship defined in your classes
-            return await _context.Set<Role>()
-                .Where(r => r.Users.Any(u => u.Id == userId))
-                .ToListAsync();
+            // 1. Buscamos la credencial (identidad) del usuario
+            var userCredential = await _userManager.FindByIdAsync(userId.ToString());
+
+            if (userCredential == null) return Enumerable.Empty<Role>();
+
+            // 2. Obtenemos los nombres de los roles asociados
+            var roleNames = await _userManager.GetRolesAsync(userCredential);
+
+            // 3. Mapeamos a nuestras entidades de Dominio
+            // Nota: Aquí podrías querer traer los IDs reales de la DB si los necesitas
+            var roles = new List<Role>();
+            foreach (var name in roleNames)
+            {
+                var appRole = await _roleManager.FindByNameAsync(name);
+                if (appRole != null)
+                {
+                    roles.Add(new Role
+                    {
+                        Id = appRole.Id,
+                        Name = appRole.Name!
+                    });
+                }
+            }
+            return roles;
         }
     }
 }

@@ -11,9 +11,11 @@ namespace Application.Services.Interfaces.Repositories
         Task<Role?> GetRoleByNameAsync(string roleName);
 
         // Create the Many-to-Many link between User and Role
-        Task AssignRoleToUserAsync(Guid userId, int roleId);
+        Task AssignRoleToUserAsync(Guid userId, Guid roleId);
 
         // Get all roles assigned to a specific user (needed for claims/token)
+
         Task<IEnumerable<Role>> GetUserRolesAsync(Guid userId);
+
     }
 }

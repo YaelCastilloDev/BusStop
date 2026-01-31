@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Infraestructur.Identity.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,8 +54,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         x => x.UseNetTopologySuite()
     ));
 
-builder.Services.AddIdentity<User, Role>(options =>
-{
+builder.Services.AddIdentity<UserCredential, AppRole>(options => {
+
     // Password settings (optional configuration)
     options.Password.RequireDigit = true;
     options.Password.RequiredLength = 8;
@@ -87,6 +88,8 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRouteRepository, RouteRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+// Program.cs o su método de extensión de servicios
+builder.Services.AddScoped<IUserIdentityRepository, UserIdentityRepository>();
 
 // --- 3. Build the Application ---
 var app = builder.Build(); // <--- The "Lock" happens here.
