@@ -3,17 +3,17 @@ using Application.Services.Interfaces.Repositories;
 using Domain.Entities;
 using Infraestructur;
 using Infraestructur.Data; // Ensure this matches your ApplicationDbContext namespace
+using Infraestructur.Identity.Models;
 using Infraestructur.Identity.Services;
 using Infraestructur.Models;
 using Infraestructur.Repositories;
 using Infrastructur.Identity.Services;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
-
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Infraestructur.Identity.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -67,20 +67,29 @@ builder.Services.AddIdentity<UserCredential, AppRole>(options => {
 
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultAuthenticateScheme = "Bearer";
-    options.DefaultChallengeScheme = "Bearer";
+    // Usamos las constantes oficiales para evitar errores de dedo (typos)
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 })
-.AddJwtBearer("Bearer", options =>
+.AddJwtBearer(options =>
 {
+    var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+    var key = jwtSettings["Key"];
+
+    if (string.IsNullOrEmpty(key))
+        throw new InvalidOperationException("JWT Key is missing in appsettings.json");
+
     options.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+        ValidateIssuer = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidateAudience = true,
+        ValidAudience = jwtSettings["Audience"],
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero // Opcional: elimina el margen de 5 min por defecto
     };
 });
 
