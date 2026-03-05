@@ -34,16 +34,42 @@ namespace Infraestructur.Repositories
 
         public async Task<Result> CreateAsync(User user, string password)
         {
-            var credential = CreateCredential(user);
-            var identityResult = await _userManager.CreateAsync(credential, password);
+            // 1. DIVERGE: Start a database transaction so either both save, or neither save
+            using var transaction = await _context.Database.BeginTransactionAsync();
 
-            if (identityResult.Succeeded)
+            try
             {
-                return Result.Success();
-            }
+                // 2. Add and save the Domain User first! 
+                // This ensures the 'users' table has the ID before user_credentials tries to link to it.
+                await _context.DomainUsers.AddAsync(user);
+                await _context.SaveChangesAsync();
 
-            var error = string.Join(", ", identityResult.Errors.Select(e => e.Description));
-            return Result.Failure(error);
+                // 3. Prepare the infrastructure model
+                var credential = CreateCredential(user);
+
+                // Note: Do NOT set credential.User = user here, because EF Core might try 
+                // to insert the User again and cause a duplicate key error. The Id link is enough.
+                credential.User = null!; // Or remove `User = user` from your CreateCredential method
+
+                // 4. Save the Credentials via Identity
+                var identityResult = await _userManager.CreateAsync(credential, password);
+
+                if (identityResult.Succeeded)
+                {
+                    // 5. Commit the transaction if everything worked
+                    await transaction.CommitAsync();
+                    return Result.Success();
+                }
+
+                // If Identity failed (e.g., password too weak), the transaction will rollback automatically
+                var error = string.Join(", ", identityResult.Errors.Select(e => e.Description));
+                return Result.Failure(error);
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return Result.Failure($"Database error: {ex.Message}");
+            }
         }
 
         public async Task<Result> CreateAsyncWithThirdParty(User user)

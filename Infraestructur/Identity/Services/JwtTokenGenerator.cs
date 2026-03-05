@@ -31,7 +31,6 @@ namespace Infrastructur.Identity.Services
             };
 
             // 2. Define Secret Key and Credentials
-            // The key is retrieved from appsettings.json
             var key = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(_configuration["JwtSettings:Key"]!)
             );

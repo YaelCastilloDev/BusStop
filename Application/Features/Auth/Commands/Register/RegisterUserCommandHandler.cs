@@ -34,8 +34,9 @@ namespace Application.Features.Auth.Commands.Register
             if (existingUser != null) throw new Exception("Email already in use.");
 
             // 2. Fetch the default role
-            var userRole = await _roleRepository.GetRoleByNameAsync("User");
-            if (userRole == null) throw new Exception("Default 'User' role not found.");
+            // 2. Fetch the default role (Matching your Enum name)
+            var userRole = await _roleRepository.GetRoleByNameAsync("BasicUser");
+            if (userRole == null) throw new Exception("Default 'BasicUser' role not found.");
 
             // 3. Create the Domain Entity
             var newUser = new User

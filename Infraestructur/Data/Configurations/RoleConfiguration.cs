@@ -4,8 +4,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructur.Data.Configurations;
 
-public class RoleConfiguration : IEntityTypeConfiguration<Role>
-{
+public class RoleConfiguration //: IEntityTypeConfiguration<Role>
+{/*
     public void Configure(EntityTypeBuilder<Role> builder)
     {
         builder.ToTable("roles");
@@ -37,5 +37,5 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
                 .HasColumnName("users_id")
                 .HasConversion<byte[]>(); // This tells EF to store the Guid as bytes in the join tabl
                 });
-    }
+    }*/
 }
