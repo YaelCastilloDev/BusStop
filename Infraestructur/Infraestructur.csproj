@@ -1,36 +1,43 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="Identity\Data\" />
-    <Folder Include="Identity\Seeds\" />
-    <Folder Include="Interfaces\" />
-    <Folder Include="Migrations\" />
-  </ItemGroup>
+	<ItemGroup>
+		<Folder Include="Identity\Data\" />
+		<Folder Include="Identity\Seeds\" />
+		<Folder Include="Interfaces\" />
+		<Folder Include="Migrations\" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
-    <PackageReference Include="MailKit" Version="4.14.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.3.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.23" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.3.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.9" />
-    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="9.0.9" />
-    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="9.0.9" />
-    <PackageReference Include="MimeKit" Version="4.14.0" />
-    <PackageReference Include="NuGet.Common" Version="6.14.0" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
-    <PackageReference Include="xunit" Version="2.9.3" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+		<PackageReference Include="MailKit" Version="4.14.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.12" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.12">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.12" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.12">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.Extensions.Identity.Core" Version="8.0.12" />
+		<PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="8.0.12" />
+		<PackageReference Include="MimeKit" Version="4.15.1" />
+		<PackageReference Include="NuGet.Common" Version="6.12.0" />
+		<PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.2" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.1.0" />
+		<PackageReference Include="xunit" Version="2.9.3" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\JenilSojitra\CleanArchitectureDemo\CleanArchitecture\CleanArchitecture.Domain\Domain.csproj" />
-    <ProjectReference Include="..\Application\Application.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\JenilSojitra\CleanArchitectureDemo\CleanArchitecture\CleanArchitecture.Domain\Domain.csproj" />
+		<ProjectReference Include="..\Application\Application.csproj" />
+	</ItemGroup>
 
 </Project>
