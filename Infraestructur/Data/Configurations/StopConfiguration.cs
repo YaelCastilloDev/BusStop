@@ -17,6 +17,12 @@ namespace Infrastructur.Data.Configurations
             builder.Property(e => e.RoutePath).HasColumnName("route").HasColumnType("multilinestring");
             builder.Property(e => e.CreatedBy).HasColumnName("created_by").HasConversion<byte[]>();
 
+            builder.Property(e => e.CreatedAt)
+            .HasColumnName("created_at")
+            .HasColumnType("timestamp") // O datetime, dependiendo de tu preferencia
+            .HasDefaultValueSql("CURRENT_TIMESTAMP")
+            .ValueGeneratedOnAdd();
+
             builder.HasOne(d => d.Route)
                 .WithMany(p => p.Stops)
                 .HasForeignKey(d => d.RouteId)
