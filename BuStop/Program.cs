@@ -36,6 +36,7 @@ builder.Services.AddSwaggerGen();
 // Auth Services
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+builder.Services.AddScoped<IRouteRepository, RouteRepository>();
 
 // AutoMapper
 builder.Services.AddAutoMapper(cfg =>

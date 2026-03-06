@@ -17,10 +17,12 @@ namespace Application.Features.Routes.Commands
         {
             var route = new Route
             {
-                Id = Guid.NewGuid(),
+                Id = Guid.NewGuid(), // Server-generated ID
                 Name = request.Name,
-                CreatedBy = request.IdCreator, 
+                CreatedBy = request.IdCreator,
+                // Description = request.Description // Add this to the Command/Entity if needed
             };
+
             await _routeRepository.AddAsync(route);
 
             return route.Id;

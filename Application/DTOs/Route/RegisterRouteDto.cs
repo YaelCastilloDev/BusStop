@@ -5,15 +5,10 @@ namespace Application.DTOs.Route
     public class RegisterRouteDto
     {
         [Required]
-        [StringLength(100)]
+        [StringLength(100, MinimumLength = 3)]
         public string Name { get; set; } = string.Empty;
 
-        [StringLength(500)]
+        // If you want to allow an optional description:
         public string? Description { get; set; }
-
-        // Added this to match your Controller's logic
-        // This could be a list of coordinates or Stop IDs
-        [Required]
-        public List<StopDto> Stops { get; set; } = new();
     }
 }
