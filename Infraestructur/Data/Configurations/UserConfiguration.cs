@@ -11,7 +11,7 @@ namespace Infrastructure.Data.Configurations
         {
             builder.ToTable("users");
             builder.HasKey(e => e.Id);
-            builder.Property(e => e.Id).HasColumnName("id").HasConversion<byte[]>();
+            builder.Property(e => e.Id).HasColumnName("id");
             builder.Property(e => e.Name).HasColumnName("name").HasMaxLength(45);
             builder.Property(e => e.Email).HasColumnName("email").HasMaxLength(45);
             builder.Property(e => e.EmailVerified).HasColumnName("email_verified").HasColumnType("tinyint");

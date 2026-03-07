@@ -12,16 +12,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Common\Behaviours\" />
     <Folder Include="Common\Exceptions\" />
     <Folder Include="Common\Interfaces\" />
     <Folder Include="Features\Auth\Queries\" />
     <Folder Include="Features\Routes\Queries\" />
+    <Folder Include="Features\Stops\Queries\" />
     <Folder Include="Profiles\" />
   </ItemGroup>
 
   <ItemGroup>
-	  <PackageReference Include="AutoMapper" Version="13.0.1" /> 
+	  <PackageReference Include="AutoMapper" Version="13.0.1" />
+	  <PackageReference Include="FluentValidation" Version="11.11.0" />
+	  <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" /> 
 	  <PackageReference Include="Google.Apis.Auth" Version="1.72.0" />
     <PackageReference Include="MediatR" Version="13.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="5.0.17" />
