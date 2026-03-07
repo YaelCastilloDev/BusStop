@@ -9,7 +9,7 @@ namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] // 1. Now that your JWT works, protect this!
+    [Authorize] 
     public class RoutesController : ControllerBase
     {
         private readonly IMediator _mediator;

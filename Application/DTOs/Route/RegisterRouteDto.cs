@@ -9,6 +9,6 @@ namespace Application.DTOs.Route
         public string Name { get; set; } = string.Empty;
 
         // If you want to allow an optional description:
-        public string? Description { get; set; }
+      //  public string? Description { get; set; }
     }
 }
