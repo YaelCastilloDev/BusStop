@@ -22,8 +22,6 @@ public class ApplicationDbContext : IdentityDbContext<UserCredential, AppRole, G
         // 1. PRIMERO: Configuración base de Identity
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
-
         // 2. Mapear 'UserCredential' a 'user_credentials'
         modelBuilder.Entity<UserCredential>(entity => {
             entity.ToTable("user_credentials");
