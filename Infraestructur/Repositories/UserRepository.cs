@@ -156,14 +156,13 @@ namespace Infraestructur.Repositories
 
         // --- PRIVATE HELPERS ---
 
+        // --- Infraestructur/Repositories/UserRepository.cs ---
         private async Task<User?> GetDomainUserAsync(Guid id)
-    {
-        // ERROR CORREGIDO: Usamos DomainUsers. Ahora .Include(u => u.Roles) funcionará
-        // porque la clase Domain.User SÍ tiene la propiedad Roles.
-        return await _context.DomainUsers
-            .Include(u => u.Roles) 
-            .FirstOrDefaultAsync(u => u.Id == id);
-    }
+        {
+            // CERO INCLUDES. Solo traemos al usuario.
+            return await _context.DomainUsers
+                .FirstOrDefaultAsync(u => u.Id == id);
+        }
 
         private UserCredential CreateCredential(User user)
         {

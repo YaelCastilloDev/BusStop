@@ -3,7 +3,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Application.DTOs.Route
 {
-    // A simple record to hold Longitude (X) and Latitude (Y)
     public record CoordinateDto(double Longitude, double Latitude);
 
     public class RegisterStopDto
@@ -12,9 +11,7 @@ namespace Application.DTOs.Route
         public Guid RouteId { get; set; }
 
         [Required]
-        // Outer List = The MultiLineString
-        // Inner List = The LineStrings (Paths)
-        // CoordinateDto = The Points
-        public List<List<CoordinateDto>> RouteCoordinates { get; set; } = new();
+        // ¡Mucho más limpio! Una sola lista continua de puntos.
+        public List<CoordinateDto> RouteCoordinates { get; set; } = new();
     }
 }

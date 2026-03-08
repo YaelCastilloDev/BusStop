@@ -18,16 +18,15 @@ namespace Application.Features.Stops.Commands
 
         public async Task<Guid> Handle(RegisterStopCommand request, CancellationToken cancellationToken)
         {
-            // 1. Convert DTO Coordinates to NTS MultiLineString
-            // We trust the validator, so we can use a clean LINQ chain
-            var multiLineString = CreateMultiLineString(request.RouteCoordinates);
+            // 1. Convert DTO Coordinates to NTS LineString
+            var lineString = CreateLineString(request.RouteCoordinates);
 
             // 2. Map to Domain Entity
             var stop = new Stop
             {
                 Id = Guid.NewGuid(),
                 RouteId = request.RouteId,
-                RoutePath = multiLineString,
+                RoutePath = lineString, // ✨ Asignamos la línea continua
                 CreatedBy = request.CreatedBy
             };
 
@@ -35,18 +34,14 @@ namespace Application.Features.Stops.Commands
             return await _stopRepository.AddAsync(stop, cancellationToken);
         }
 
-        // Helper Method
-        private MultiLineString CreateMultiLineString(List<List<CoordinateDto>> coordinateLists)
+        // ✨ NUEVO Helper Method
+        private LineString CreateLineString(List<CoordinateDto> coordinates)
         {
-            // Because FluentValidation guarantees >= 2 points, 
-            // we can safely map directly to LineString objects.
-            var lineStrings = coordinateLists
-                .Select(line => new LineString(
-                    line.Select(c => new Coordinate(c.Longitude, c.Latitude)).ToArray()
-                ))
+            var ntsCoordinates = coordinates
+                .Select(c => new Coordinate(c.Longitude, c.Latitude))
                 .ToArray();
 
-            return new MultiLineString(lineStrings);
+            return new LineString(ntsCoordinates);
         }
     }
 }

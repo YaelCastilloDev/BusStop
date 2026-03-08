@@ -6,7 +6,7 @@ namespace Application.Features.Stops.Commands
 {
     public record RegisterStopCommand(
         Guid RouteId,
-        List<List<CoordinateDto>> RouteCoordinates,
+        List<CoordinateDto> RouteCoordinates, // ✨ CAMBIO: Ahora es una lista simple
         Guid CreatedBy
-    ) : IRequest<Guid>; // Returns the ID of the newly created Stop
+    ) : IRequest<Guid>;
 }

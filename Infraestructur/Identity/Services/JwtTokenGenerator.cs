@@ -17,15 +17,15 @@ namespace Infrastructur.Identity.Services
             _configuration = configuration;
         }
 
-        public string GenerateToken(User user, string roleName)
+        public string GenerateToken(Guid userId, string email, string roleName)
         {
             // 1. Define Claims (The Token Payload)
             var claims = new List<Claim>
             {
                 // Standard Claims (Subject, ID, Email)
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email!),
+                new Claim(JwtRegisteredClaimNames.Email, email!),
                 // Role Claim (Used for authorization checks)
                 new Claim(ClaimTypes.Role, roleName)
             };

@@ -86,7 +86,7 @@ namespace Application.Features.Auth.Commands.GoogleLogin
             var userRoles = await _roleRepository.GetUserRolesAsync(user.Id);
             var roleName = userRoles.FirstOrDefault()?.Name ?? "User";
 
-            var token = _jwtTokenGenerator.GenerateToken(user, roleName);
+            var token = _jwtTokenGenerator.GenerateToken(user.Id, user.Email, roleName);
 
             return new AuthResponseDto
             {

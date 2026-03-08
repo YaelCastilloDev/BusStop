@@ -1,9 +1,10 @@
-﻿using Application.Features.Auth.Commands.Login.GoogleLogin;
-using Application.Features.Auth.Commands.Register;
+﻿using Application.DTOs.Auth;
 using Application.Features.Auth.Commands.Login; 
+using Application.Features.Auth.Commands.Login.GoogleLogin;
+using Application.Features.Auth.Commands.Register;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Application.DTOs.Auth;
 
 namespace WebApi.Controllers
 {
@@ -50,14 +51,20 @@ namespace WebApi.Controllers
         /// Authenticates a user using standard Email and Password.
         /// </summary>
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginCommand command)
+        [AllowAnonymous] // No necesitas token para logearte
+        public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
-           /* LoginCommandDto add the dto attributes when you have the handler of the command */ var response = await _mediator.Send(command);
+            try
+            {
+                var command = new LoginCommand(dto.Email, dto.Password);
+                var token = await _mediator.Send(command);
 
-       //     if (!response.Success)
-       //         return Unauthorized(response);
-
-            return Ok(response);
+                return Ok(new { Token = token, Message = "Login exitoso" });
+            }
+            catch (Exception ex)
+            {
+                return Unauthorized(new { Message = ex.Message });
+            }
         }
     }
 }

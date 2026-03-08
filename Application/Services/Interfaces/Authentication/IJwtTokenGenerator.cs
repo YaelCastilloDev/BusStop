@@ -3,5 +3,5 @@ using Domain.Entities;
 
 public interface IJwtTokenGenerator
 {
-    string GenerateToken(User user, string roleName);
+    string GenerateToken(Guid userId, string email, string roleName);
 }

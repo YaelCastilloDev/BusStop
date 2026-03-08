@@ -61,7 +61,7 @@ namespace Application.Features.Auth.Commands.Register
             await _roleRepository.AssignRoleToUserAsync(newUser.Id, userRole.Id);
 
             // 6. Generate the JWT Token
-            var token = _jwtTokenGenerator.GenerateToken(newUser, userRole.Name);
+            var token = _jwtTokenGenerator.GenerateToken(newUser.Id, newUser.Email, userRole.Name);
 
             return new AuthResponseDto
             {

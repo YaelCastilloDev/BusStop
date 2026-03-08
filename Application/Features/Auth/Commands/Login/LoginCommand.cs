@@ -1,6 +1,6 @@
-﻿namespace Application.Features.Auth.Commands.Login
+﻿using MediatR;
+
+namespace Application.Features.Auth.Commands.Login
 {
-    public class LoginCommand
-    {
-    }
+    public record LoginCommand(string Email, string Password) : IRequest<string>;
 }
