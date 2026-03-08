@@ -12,8 +12,8 @@ using NetTopologySuite.Geometries;
 namespace Infraestructur.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260306075347_InitialBaseline")]
-    partial class InitialBaseline
+    [Migration("20260308085338_AddRoleSeeds")]
+    partial class AddRoleSeeds
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,22 +27,21 @@ namespace Infraestructur.Migrations
 
             modelBuilder.Entity("Domain.Entities.Comment", b =>
                 {
-                    b.Property<byte[]>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("varbinary(16)")
+                        .HasColumnType("binary(16)")
                         .HasColumnName("id");
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp")
                         .HasColumnName("deleted_at");
 
-                    b.Property<byte[]>("DeletedBy")
-                        .HasColumnType("varbinary(16)")
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("binary(16)")
                         .HasColumnName("deleted_by");
 
-                    b.Property<byte[]>("RouteId")
-                        .IsRequired()
-                        .HasColumnType("varbinary(16)")
+                    b.Property<Guid>("RouteId")
+                        .HasColumnType("binary(16)")
                         .HasColumnName("routes_id");
 
                     b.Property<string>("Text")
@@ -50,9 +49,8 @@ namespace Infraestructur.Migrations
                         .HasColumnType("varchar(500)")
                         .HasColumnName("text");
 
-                    b.Property<byte[]>("UserId")
-                        .IsRequired()
-                        .HasColumnType("varbinary(16)")
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("binary(16)")
                         .HasColumnName("users_id");
 
                     b.HasKey("Id");
@@ -68,12 +66,12 @@ namespace Infraestructur.Migrations
 
             modelBuilder.Entity("Domain.Entities.CommentReaction", b =>
                 {
-                    b.Property<byte[]>("UserId")
-                        .HasColumnType("varbinary(16)")
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("binary(16)")
                         .HasColumnName("users_id");
 
-                    b.Property<byte[]>("CommentId")
-                        .HasColumnType("varbinary(16)")
+                    b.Property<Guid>("CommentId")
+                        .HasColumnType("binary(16)")
                         .HasColumnName("comments_id");
 
                     b.Property<bool>("Liked")
@@ -89,22 +87,21 @@ namespace Infraestructur.Migrations
 
             modelBuilder.Entity("Domain.Entities.Route", b =>
                 {
-                    b.Property<byte[]>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("varbinary(16)")
+                        .HasColumnType("binary(16)")
                         .HasColumnName("id");
 
-                    b.Property<byte[]>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("varbinary(16)")
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("binary(16)")
                         .HasColumnName("created_by");
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp")
                         .HasColumnName("deleted_at");
 
-                    b.Property<byte[]>("DeletedBy")
-                        .HasColumnType("varbinary(16)")
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("binary(16)")
                         .HasColumnName("deleted_by");
 
                     b.Property<string>("Name")
@@ -122,29 +119,35 @@ namespace Infraestructur.Migrations
 
             modelBuilder.Entity("Domain.Entities.Stop", b =>
                 {
-                    b.Property<byte[]>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("varbinary(16)")
+                        .HasColumnType("binary(16)")
                         .HasColumnName("id");
 
-                    b.Property<byte[]>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("varbinary(16)")
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("binary(16)")
                         .HasColumnName("created_by");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("timestamp")
+                        .HasColumnName("deleted_at");
 
                     b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("char(36)");
+                        .HasColumnType("binary(16)")
+                        .HasColumnName("deleted_by");
 
-                    b.Property<byte[]>("RouteId")
-                        .IsRequired()
-                        .HasColumnType("varbinary(16)")
+                    b.Property<Guid>("RouteId")
+                        .HasColumnType("binary(16)")
                         .HasColumnName("routes_id");
 
-                    b.Property<MultiLineString>("RoutePath")
-                        .HasColumnType("multilinestring")
+                    b.Property<LineString>("RoutePath")
+                        .HasColumnType("linestring")
                         .HasColumnName("route");
 
                     b.HasKey("Id");
@@ -156,14 +159,14 @@ namespace Infraestructur.Migrations
 
             modelBuilder.Entity("Domain.Entities.User", b =>
                 {
-                    b.Property<byte[]>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("varbinary(16)")
+                        .HasColumnType("binary(16)")
                         .HasColumnName("id");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp")
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
@@ -194,7 +197,7 @@ namespace Infraestructur.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)")
+                        .HasColumnType("binary(16)")
                         .HasColumnName("id");
 
                     b.Property<string>("Name")
@@ -214,6 +217,32 @@ namespace Infraestructur.Migrations
                         .HasDatabaseName("RoleNameIndex");
 
                     b.ToTable("roles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("0195758d-7b2a-7c9e-9f4a-1a2b3c4d5e6f"),
+                            Name = "SuperAdmin",
+                            NormalizedName = "SUPERADMIN"
+                        },
+                        new
+                        {
+                            Id = new Guid("0195758d-7b2a-7c9e-9f4b-2b3c4d5e6f7a"),
+                            Name = "Admin",
+                            NormalizedName = "ADMIN"
+                        },
+                        new
+                        {
+                            Id = new Guid("0195758d-7b2a-7c9e-9f4c-3c4d5e6f7a8b"),
+                            Name = "Moderator",
+                            NormalizedName = "MODERATOR"
+                        },
+                        new
+                        {
+                            Id = new Guid("0195758d-7b2a-7c9e-9f4d-4d5e6f7a8b9c"),
+                            Name = "BasicUser",
+                            NormalizedName = "BASICUSER"
+                        });
                 });
 
             modelBuilder.Entity("Infraestructur.Identity.Models.RefreshToken", b =>
@@ -254,8 +283,8 @@ namespace Infraestructur.Migrations
 
             modelBuilder.Entity("Infraestructur.Identity.Models.UserCredential", b =>
                 {
-                    b.Property<byte[]>("Id")
-                        .HasColumnType("varbinary(16)")
+                    b.Property<Guid>("Id")
+                        .HasColumnType("binary(16)")
                         .HasColumnName("users_id");
 
                     b.Property<int>("AccessFailedCount")
@@ -383,7 +412,7 @@ namespace Infraestructur.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<Guid>("RoleId")
-                        .HasColumnType("char(36)");
+                        .HasColumnType("binary(16)");
 
                     b.HasKey("Id");
 
@@ -406,9 +435,8 @@ namespace Infraestructur.Migrations
                     b.Property<string>("ClaimValue")
                         .HasColumnType("longtext");
 
-                    b.Property<byte[]>("UserId")
-                        .IsRequired()
-                        .HasColumnType("varbinary(16)");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("binary(16)");
 
                     b.HasKey("Id");
 
@@ -428,9 +456,8 @@ namespace Infraestructur.Migrations
                     b.Property<string>("ProviderDisplayName")
                         .HasColumnType("longtext");
 
-                    b.Property<byte[]>("UserId")
-                        .IsRequired()
-                        .HasColumnType("varbinary(16)");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("binary(16)");
 
                     b.HasKey("LoginProvider", "ProviderKey");
 
@@ -441,12 +468,12 @@ namespace Infraestructur.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
                 {
-                    b.Property<byte[]>("UserId")
-                        .HasColumnType("varbinary(16)")
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("binary(16)")
                         .HasColumnName("users_id");
 
                     b.Property<Guid>("RoleId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("binary(16)")
                         .HasColumnName("roles_id");
 
                     b.HasKey("UserId", "RoleId");
@@ -458,8 +485,8 @@ namespace Infraestructur.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
                 {
-                    b.Property<byte[]>("UserId")
-                        .HasColumnType("varbinary(16)");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("binary(16)");
 
                     b.Property<string>("LoginProvider")
                         .HasColumnType("varchar(255)");

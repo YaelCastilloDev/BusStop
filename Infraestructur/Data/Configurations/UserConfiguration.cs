@@ -15,7 +15,7 @@ namespace Infrastructure.Data.Configurations
             builder.Property(e => e.Name).HasColumnName("name").HasMaxLength(45);
             builder.Property(e => e.Email).HasColumnName("email").HasMaxLength(45);
             builder.Property(e => e.EmailVerified).HasColumnName("email_verified").HasColumnType("tinyint");
-            builder.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("CURRENT_TIMESTAMP");
+            builder.Property(e => e.CreatedAt).HasColumnName("created_at").HasColumnType("timestamp").HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             builder.HasIndex(e => e.Email).IsUnique().HasDatabaseName("email_UNIQUE");
         }
