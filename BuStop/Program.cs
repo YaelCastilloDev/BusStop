@@ -1,6 +1,8 @@
 using Application.Services.Interfaces.Authentication;
+using Application.Services.Interfaces.Comments;
 using Application.Services.Interfaces.Repositories;
 using Domain.Entities;
+using FluentValidation;
 using Infraestructur;
 using Infraestructur.Data; // Ensure this matches your ApplicationDbContext namespace
 using Infraestructur.Identity.Models;
@@ -13,9 +15,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using FluentValidation;
 using System.Reflection;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,6 +41,7 @@ builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<IRouteRepository, RouteRepository>();
+builder.Services.AddScoped<ICommentReactionRepository, CommentReactionRepository>();
 
 // AutoMapper
 builder.Services.AddAutoMapper(cfg =>
@@ -104,6 +106,8 @@ builder.Services.AddScoped<IRouteRepository, RouteRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 // Program.cs o su método de extensión de servicios
 builder.Services.AddScoped<IUserIdentityRepository, UserIdentityRepository>();
+builder.Services.AddScoped<ICommentsRepository, CommentsRepository>();
+
 
 // --- 3. Build the Application ---
 var app = builder.Build(); // <--- The "Lock" happens here.

@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿// --- Infrastructure/Data/Configurations/CommentReactionConfiguration.cs ---
+using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -10,11 +11,12 @@ namespace Infrastructure.Data.Configurations
         {
             builder.ToTable("comments_reactions");
 
-            // CHANGE: Order matches SQL PRIMARY KEY (`users_id`, `comments_id`)
             builder.HasKey(e => new { e.UserId, e.CommentId });
 
-            builder.Property(e => e.CommentId).HasColumnName("comments_id").HasConversion<byte[]>();
-            builder.Property(e => e.UserId).HasColumnName("users_id").HasConversion<byte[]>();
+            // ELIMINADO: .HasConversion<byte[]>()
+            builder.Property(e => e.CommentId).HasColumnName("comments_id");
+            builder.Property(e => e.UserId).HasColumnName("users_id");
+
             builder.Property(e => e.Liked).HasColumnName("liked");
 
             builder.HasOne(d => d.Comment)

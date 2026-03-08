@@ -18,6 +18,7 @@
     <Folder Include="Features\Routes\Queries\" />
     <Folder Include="Features\Stops\Queries\" />
     <Folder Include="Profiles\" />
+    <Folder Include="Services\Interfaces\Comments\" />
   </ItemGroup>
 
   <ItemGroup>

@@ -35,7 +35,7 @@ namespace Application.Features.Auth.Commands.Register
 
             // 2. Fetch the default role
             // 2. Fetch the default role (Matching your Enum name)
-            var userRole = await _roleRepository.GetRoleByNameAsync("BasicUser");
+            var userRole = await _roleRepository.GetRoleByNameAsync("BASICUSER");
             if (userRole == null) throw new Exception("Default 'BasicUser' role not found.");
 
             // 3. Create the Domain Entity

@@ -43,7 +43,7 @@ namespace Infrastructur.Identity.Services
                 Issuer = _configuration["JwtSettings:Issuer"],
                 Audience = _configuration["JwtSettings:Audience"],
                 Expires = DateTime.UtcNow.AddMinutes(
-                    Convert.ToDouble(_configuration["JwtSettings:DurationInMinutes"] ?? "60")
+                    Convert.ToDouble(_configuration["JwtSettings:DurationInMinutes"] ?? "300")
                 ),
                 SigningCredentials = credentials
             };
