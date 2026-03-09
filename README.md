@@ -1,48 +1,89 @@
-🚌 BuStop API
-BuStop is a robust backend API designed to manage urban bus routes and stops. Built with modern .NET 8, it leverages spatial data (GIS) to provide real-time proximity searches, allowing users to find the nearest bus routes based on their geographic coordinates.
+# 🚌 BuStop API
 
-Key Features
+**BuStop** is a robust backend API designed to manage urban **bus routes and stops**.
 
-Role-Based Access Control (RBAC): Hierarchical permission system, encouragint a big community.
+Built with **.NET 8** and **geospatial technologies**, it allows users to find the **nearest bus routes based on their geographic coordinates** using spatial queries.
 
-Optimized Performance: * Strategic Caching: Reduces database overhead for frequently requested route data.
+---
 
-Global Latency Management: Integrated CDN support to ensure fast response times for static assets and geographic data regardless of the user's location.
+## ✨ Key Features
 
-🏗️ Architecture
-This project strictly follows the Clean Architecture principles, divided into four highly decoupled layers:
+### 🔐 Role-Based Access Control (RBAC)
+Hierarchical permission system that enables the creation of a scalable community where administrators can manage user permissions.
 
-Domain: Contains the fundamental entities, core logic, and rules that govern the bus system.. 
+### ⚡ Optimized Performance
+- **Strategic Caching** – Reduces database overhead for frequently requested route data.
+- **Efficient Spatial Queries** – Uses geospatial indexing to quickly find nearby routes.
 
-Application: Contains the business logic, Use Cases (CQRS Commands and Queries), DTOs, Interfaces and so on.
+### 🌍 Global Latency Management
+Integrated **CDN support** ensures fast delivery of static assets and geographic data regardless of the user’s location.
 
-Infrastructure: Handles all technical details and external communications, including database persistence (EF Core), Identity management, and spatial library configurations.
+---
 
-WebApi (Presentation): The external interface. Manages the RESTful API endpoints, JWT authentication, and request middleware.
+# 🏗️ Architecture
 
-🛠️ Tech Stack
-Framework: .NET 8 Web API
+This project follows **Clean Architecture**, separating responsibilities into four independent layers:
 
-Language: C#
+| Layer | Responsibility |
+|------|------|
+| **Domain** | Core entities, business rules, and domain logic |
+| **Application** | Use cases, CQRS commands/queries, DTOs, interfaces |
+| **Infrastructure** | Database persistence, Identity, EF Core, spatial configuration |
+| **WebAPI** | REST endpoints, authentication, middleware |
 
-Database: MySQL (via Pomelo.EntityFrameworkCore.MySql)
+---
 
-ORM: Entity Framework Core
+# 🛠️ Tech Stack
 
-Geospatial Library: NetTopologySuite (NTS)
+## Backend
 
-Mediator Pattern: MediatR (LuckyPennySoftware)
+| Technology | Description |
+|-----------|-------------|
+| **.NET 8 Web API** | Backend framework |
+| **C#** | Programming language |
+| **Entity Framework Core** | ORM |
+| **MySQL (Pomelo)** | Relational database |
+| **NetTopologySuite** | Geospatial spatial queries |
+| **MediatR** | CQRS and Mediator pattern |
+| **FluentValidation** | Request validation |
 
-Validation: FluentValidation
+---
 
-Frontend & UI
-Framework: Vue.js
+## Frontend
 
-Styling: Modern HTML5 & CSS3 for responsive transit dashboards.
+| Technology | Purpose |
+|-----------|-----------|
+| **Vue.js** | Frontend framework |
+| **HTML5 / CSS3** | Responsive transit dashboards |
 
-Data & Security
-Database: MySQL with Spatial Extensions.
+---
 
-ORM: Entity Framework Core.
+# 🔐 Security
 
-Identity: ASP.NET Core Identity with JWT Bearer tokens for secure, stateless sessions.
+- **ASP.NET Core Identity**
+- **JWT Bearer Authentication**
+- **Role-Based Authorization**
+- **Stateless sessions**
+
+---
+
+# 🗄️ Data Layer
+
+- **MySQL with Spatial Extensions**
+- Geospatial queries with **NetTopologySuite**
+- Optimized indexing for route proximity searches
+
+---
+
+# 📌 Future Improvements
+
+- Redis distributed caching
+- Route prediction with machine learning
+- Real-time bus tracking
+- Mobile API support
+
+---
+
+# 👨‍💻 Author
+
+Developed by **Yael Castillo**
