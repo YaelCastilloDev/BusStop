@@ -14,9 +14,7 @@
   <ItemGroup>
     <Folder Include="Common\Exceptions\" />
     <Folder Include="Common\Interfaces\" />
-    <Folder Include="Features\Auth\NewFolder\" />
     <Folder Include="Features\Auth\Queries\" />
-    <Folder Include="Features\Routes\Queries\" />
     <Folder Include="Features\Stops\Queries\" />
     <Folder Include="Profiles\" />
     <Folder Include="Services\Interfaces\Comments\" />
