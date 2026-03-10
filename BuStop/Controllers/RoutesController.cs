@@ -4,6 +4,7 @@ using Application.Features.Routes.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Caching.Memory; // ✨ Necesario para el Caché
 using System.Security.Claims;
 using System.Security.Cryptography; // ✨ Necesario para generar el ETag
@@ -15,7 +16,8 @@ namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] 
+    [Authorize]
+    [EnableRateLimiting("GlobalPolicy")]
     public class RoutesController : ControllerBase
     {
         private readonly IMediator _mediator;

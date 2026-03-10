@@ -4,7 +4,7 @@ using Application.Services.Interfaces.Repositories;
 using Domain.Entities;
 using FluentValidation;
 using Infraestructur;
-using Infraestructur.Data; // Ensure this matches your ApplicationDbContext namespace
+using Infraestructur.Data; 
 using Infraestructur.Identity.Models;
 using Infraestructur.Identity.Services;
 using Infraestructur.Models;
@@ -17,6 +17,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Reflection;
 using System.Text;
+using WebApi.Extensions; 
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,6 +56,7 @@ builder.Services.AddAutoMapper(cfg =>
 }, typeof(IdentityMappingProfile));
 
 builder.Services.AddMemoryCache();
+builder.Services.AddCustomRateLimiting();
 
 // Database Context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -131,7 +133,7 @@ app.UseHttpsRedirection();
 // Authentication MUST come before Authorization
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseRateLimiter();
 app.MapControllers();
 
 /*using (var scope = app.Services.CreateScope())

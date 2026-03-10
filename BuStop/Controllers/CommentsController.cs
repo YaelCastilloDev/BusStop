@@ -4,16 +4,18 @@ using Application.Features.Comments.Commands;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using System.IdentityModel.Tokens.Jwt;
 
 namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     [Authorize] // User must be logged in to comment
+    [EnableRateLimiting("GlobalPolicy")]
     public class CommentsController : ControllerBase
     {
         private readonly IMediator _mediator;

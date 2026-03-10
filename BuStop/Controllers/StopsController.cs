@@ -4,14 +4,16 @@ using Application.Features.Stops.Commands;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
+using Microsoft.AspNetCore.RateLimiting;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     [Authorize] // Requires JWT
+    [EnableRateLimiting("GlobalPolicy")]
     public class StopsController : ControllerBase
     {
         private readonly IMediator _mediator;
