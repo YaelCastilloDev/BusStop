@@ -20,6 +20,7 @@ namespace Application.Features.Stops.Commands
         {
             // 1. Convert DTO Coordinates to NTS LineString
             var lineString = CreateLineString(request.RouteCoordinates);
+         //   lineString.SRID = 4326;
 
             // 2. Map to Domain Entity
             var stop = new Stop
@@ -40,6 +41,8 @@ namespace Application.Features.Stops.Commands
             var ntsCoordinates = coordinates
                 .Select(c => new Coordinate(c.Longitude, c.Latitude))
                 .ToArray();
+
+
 
             return new LineString(ntsCoordinates);
         }

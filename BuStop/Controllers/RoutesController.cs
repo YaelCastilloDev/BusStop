@@ -1,9 +1,15 @@
 ﻿using Application.DTOs.Route;
 using Application.Features.Routes.Commands;
+using Application.Features.Routes.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory; // ✨ Necesario para el Caché
 using System.Security.Claims;
+using System.Security.Cryptography; // ✨ Necesario para generar el ETag
+using System.Text;
+using System.Text.Json;
+using WebApi.Common.Caching;
 
 namespace WebApi.Controllers
 {
@@ -13,8 +19,13 @@ namespace WebApi.Controllers
     public class RoutesController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly IMemoryCache _cache; // ✨ Inyectamos el caché
 
-        public RoutesController(IMediator mediator) => _mediator = mediator;
+        public RoutesController(IMediator mediator, IMemoryCache cache)
+        {
+            _mediator = mediator;
+            _cache = cache;
+        }
 
         [HttpPost]
         public async Task<IActionResult> RegisterRoute([FromBody] RegisterRouteDto dto)
@@ -35,6 +46,36 @@ namespace WebApi.Controllers
 
             // 5. Return 201 Created
             return Ok(new { RouteId = routeId, Message = "Route registered successfully" });
+        }
+
+        [HttpGet("nearby")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetNearbyRoutes([FromQuery] double longitude, [FromQuery] double latitude)
+        {
+            double roundedLon = Math.Round(longitude, 3);
+            double roundedLat = Math.Round(latitude, 3);
+            string cacheKey = $"NearbyRoutes_{roundedLon}_{roundedLat}";
+
+            if (!_cache.TryGetValue(cacheKey, out CachedData<List<RouteDto>>? cachedData))
+            {
+                var query = new GetNearbyRoutesQuery(roundedLon, roundedLat);
+                var routes = await _mediator.Send(query);
+
+                string eTag = ETagGenerator.Generate(routes);
+
+                // Empaquetamos y guardamos
+                cachedData = new CachedData<List<RouteDto>> { Data = routes, ETag = eTag };
+                _cache.Set(cacheKey, cachedData, TimeSpan.FromMinutes(5));
+            }
+
+            if (Request.Headers.TryGetValue("If-None-Match", out var clientETag) && clientETag == cachedData!.ETag)
+            {
+                return StatusCode(StatusCodes.Status304NotModified);
+            }
+
+            Response.Headers.ETag = cachedData!.ETag;
+
+            return Ok(cachedData.Data);
         }
     }
 }
