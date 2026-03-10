@@ -1,4 +1,5 @@
 using Application.Services.Interfaces.Authentication;
+using Application.Services.Interfaces.BackgroundJobs;
 using Application.Services.Interfaces.Comments;
 using Application.Services.Interfaces.Repositories;
 using Domain.Entities;
@@ -9,6 +10,7 @@ using Infraestructur.Identity.Models;
 using Infraestructur.Identity.Services;
 using Infraestructur.Models;
 using Infraestructur.Repositories;
+using Infraestructur.Services;
 using Infrastructur.Identity.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -17,6 +19,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Reflection;
 using System.Text;
+using WebApi.BackgroundJobs;
 using WebApi.Extensions; 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -47,6 +50,7 @@ builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<IRouteRepository, RouteRepository>();
 builder.Services.AddScoped<ICommentReactionRepository, CommentReactionRepository>();
+
 
 // AutoMapper
 builder.Services.AddAutoMapper(cfg =>
@@ -113,6 +117,9 @@ builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 // Program.cs o su método de extensión de servicios
 builder.Services.AddScoped<IUserIdentityRepository, UserIdentityRepository>();
 builder.Services.AddScoped<ICommentsRepository, CommentsRepository>();
+builder.Services.AddScoped<IDatabaseCleanupService, DatabaseCleanupService>();
+
+builder.Services.AddHostedService<CleanupWorker>();
 
 
 // --- 3. Build the Application ---

@@ -78,13 +78,19 @@ public class ApplicationDbContext : IdentityDbContext<UserCredential, AppRole, G
         });
 
         // 5. Tu tabla 'users' de dominio
-        modelBuilder.Entity<User>(entity => {
+        modelBuilder.Entity<User>(entity =>
+        {
             entity.ToTable("users");
             entity.HasKey(e => e.Id);
 
             //Tell EF not to map the domain 'Role' entity to the database
             entity.Ignore(e => e.Roles);
         });
+        //This is the global query filter for soft delete, it will automatically filter out entities where DeletedAt is not null
+        modelBuilder.Entity<Route>().HasQueryFilter(r => r.DeletedAt == null);
+        modelBuilder.Entity<Stop>().HasQueryFilter(r => r.DeletedAt == null);
+        modelBuilder.Entity<Comment>().HasQueryFilter(r => r.DeletedAt == null);
+
 
         // Otros mapeos de tu ensamblado
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
