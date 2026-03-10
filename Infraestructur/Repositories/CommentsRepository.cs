@@ -2,6 +2,7 @@
 using Application.Services.Interfaces.Repositories;
 using Domain.Entities;
 using Infraestructur.Data; // Update to match your ApplicationDbContext namespace
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,6 +23,17 @@ namespace Infraestructur.Repositories
             await _context.Comments.AddAsync(comment, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
             return comment.Id;
+        }
+
+        public async Task UpdateAsync(Comment comment)
+        {
+            _context.Comments.Update(comment);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<Comment?> GetByIdAsync(Guid id)
+        {
+            return await _context.Comments.FirstOrDefaultAsync(c => c.Id == id);
         }
     }
 }

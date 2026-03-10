@@ -21,7 +21,7 @@ namespace Infraestructur.Repositories
             return route;
         }
 
-        public async Task<Route?> GetByIdAsync(Guid id)
+        public async Task<Route?> GetByIdWithStopsAsync(Guid id)
         {
             return await _dbContext.Routes
                 .Include(r => r.Stops) // Load stops with the route
@@ -54,6 +54,17 @@ namespace Infraestructur.Repositories
                 .FirstOrDefaultAsync();
 
             return nearestRoute != null ? new List<Route> { nearestRoute } : new List<Route>();
+        }
+
+        public async Task<Route?> GetByIdAsync(Guid id)
+        {
+            return await _dbContext.Routes.FirstOrDefaultAsync(r => r.Id == id);
+        }
+
+        public async Task UpdateAsync(Route route)
+        {
+            _dbContext.Routes.Update(route);
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

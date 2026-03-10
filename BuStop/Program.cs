@@ -28,6 +28,10 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 builder.Services.AddControllers();
 
+builder.Services.AddProblemDetails();
+
+builder.Services.AddExceptionHandler<WebApi.Middlewares.GlobalExceptionHandler>();
+
 // MediatR
 builder.Services.AddMediatR(cfg => {
     cfg.RegisterServicesFromAssembly(typeof(Application.Features.Auth.Commands.Register.RegisterUserCommand).Assembly);
@@ -110,7 +114,9 @@ builder.Services.AddScoped<ICommentsRepository, CommentsRepository>();
 
 
 // --- 3. Build the Application ---
-var app = builder.Build(); // <--- The "Lock" happens here.
+var app = builder.Build(); 
+
+app.UseExceptionHandler();
 
 // --- 4. Configure the HTTP request pipeline (Middleware) ---
 
@@ -128,7 +134,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-using (var scope = app.Services.CreateScope())
+/*using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
@@ -142,6 +148,6 @@ using (var scope = app.Services.CreateScope())
         var logger = services.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "Ocurrió un error al migrar o inicializar la base de datos.");
     }
-}
+} */
 
 app.Run();

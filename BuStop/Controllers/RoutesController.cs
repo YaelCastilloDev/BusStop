@@ -52,6 +52,7 @@ namespace WebApi.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetNearbyRoutes([FromQuery] double longitude, [FromQuery] double latitude)
         {
+
             double roundedLon = Math.Round(longitude, 3);
             double roundedLat = Math.Round(latitude, 3);
             string cacheKey = $"NearbyRoutes_{roundedLon}_{roundedLat}";
@@ -76,6 +77,27 @@ namespace WebApi.Controllers
             Response.Headers.ETag = cachedData!.ETag;
 
             return Ok(cachedData.Data);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteRoute(Guid id)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized(new { Message = "User ID not found in token" });
+            }
+
+            var command = new DeleteRouteCommand(id, userId);
+            var result = await _mediator.Send(command);
+
+            if (!result)
+            {
+                return NotFound(new { Message = "Route not found or already deleted." });
+            }
+
+            return Ok(new { Message = "Route deleted successfully." });
         }
     }
 }

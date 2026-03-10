@@ -61,7 +61,27 @@ namespace WebApi.Controllers
 
             return BadRequest(new { Message = "Failed to save reaction" });
         }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteComment(Guid id)
+        {
+            // Extraer el ID del usuario logueado desde su JWT
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized(new { Message = "User ID not found in token" });
+            }
+
+            // Enviar el comando
+            var command = new DeleteCommentCommand(id, userId);
+            var result = await _mediator.Send(command);
+
+            if (!result)
+            {
+                return NotFound(new { Message = "Comment not found or already deleted." });
+            }
+
+            return Ok(new { Message = "Comment deleted successfully." });
+        }
     }
-
-
 }
